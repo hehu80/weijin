@@ -1,7 +1,6 @@
 /out/
 /lib/
 .directory
-session
 .idea/**/*
 *.iml
 qr*.jpeg
