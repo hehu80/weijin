@@ -26,6 +26,7 @@ package com.huhehu.weijin.wechat.contacts;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class WeChatContact implements Serializable {
     private long uin;
@@ -179,5 +180,10 @@ public class WeChatContact implements Serializable {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName);
     }
 }

@@ -38,10 +38,11 @@ public class ContactList extends JList<WeChatContact> {
     private class ContactCellRenderer extends DefaultListCellRenderer {
         public Component getListCellRendererComponent(JList list, Object contact, int i, boolean b, boolean b1) {
             super.getListCellRendererComponent(list, contact, i, b, b1);
-            if (((WeChatContact) contact).getUserName().equalsIgnoreCase("fileHelper"))
-                setText("File Transfer");
-            else
-                setText(((WeChatContact) contact).getNickName());
+            setText(((WeChatContact) contact).getNickName());
+            if ((((ContactListModel) getModel()).getAvatar((WeChatContact) contact)) != null) {
+                setIcon(new ImageIcon((((ContactListModel) getModel()).getAvatar((WeChatContact) contact))));
+
+            }
             return this;
         }
     }

@@ -23,40 +23,52 @@
 
 package com.huhehu.weijin.ui.model;
 
-import com.huhehu.weijin.wechat.WeChatSession;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import com.huhehu.weijin.wechat.session.WeChatContactHandler;
+import com.huhehu.weijin.wechat.session.WeChatSession;
 
 import javax.swing.*;
-import java.io.IOException;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ContactListModel extends AbstractListModel<WeChatContact> implements WeChatSession.ContactListener {
+public class ContactListModel extends AbstractListModel<WeChatContact> implements WeChatContactHandler {
     private WeChatSession session;
+    private List<WeChatContact> contacts;
 
     public ContactListModel(WeChatSession session) {
         this.session = session;
-        session.addContactListener(this);
+        this.session.setContactHandler(this);
+        this.contacts = new ArrayList<>(session.getContacts());
+    }
+
+    public Image getAvatar(WeChatContact contact) {
+        return session.getContactAvatar(contact);
     }
 
     @Override
     public int getSize() {
-        try {
-            return session == null ? 0 : session.loadContacts().size();
-        } catch (IOException e) {
-            return 0;
-        }
+        return contacts.size();
     }
 
     @Override
     public WeChatContact getElementAt(int i) {
-        try {
-            return session == null ? null : session.loadContacts().get(i);
-        } catch (IOException e) {
-            return null;
-        }
+        return contacts.get(i);
     }
 
     @Override
-    public void onContactUpdate(WeChatContact contact) {
-        System.out.println("Contact Update");
+    public void onContactUpdated(WeChatContact... contacts) {
+        SwingUtilities.invokeLater(() -> {
+            for (WeChatContact contact : contacts) {
+                int index = this.contacts.indexOf(contact);
+                if (index >= 0) {
+                    this.contacts.set(index, contact);
+                    fireContentsChanged(contact, index, index); // TODO not thread-safe
+                } else {
+                    this.contacts.add(contact);
+                    fireIntervalAdded(contact, this.contacts.size() - 1, this.contacts.size() - 1); // TODO not thread-safe
+                }
+            }
+        });
     }
 }

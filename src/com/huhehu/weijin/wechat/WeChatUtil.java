@@ -39,6 +39,10 @@ public final class WeChatUtil {
     public static void downloadImageFromUrl(String imageUrl, String fileName) throws IOException {
         URL url = new URL(imageUrl);
         URLConnection connection = url.openConnection();
+        downloadImageFromUrl(connection, fileName);
+    }
+
+    public static void downloadImageFromUrl(URLConnection connection, String fileName) throws IOException {
         try (InputStream input = connection.getInputStream()) {
             Files.copy(input, Paths.get(fileName));
         }

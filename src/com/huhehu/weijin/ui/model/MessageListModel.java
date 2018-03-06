@@ -23,46 +23,77 @@
 
 package com.huhehu.weijin.ui.model;
 
-import com.huhehu.weijin.wechat.WeChatSession;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
+import com.huhehu.weijin.wechat.session.WeChatMessageHandler;
+import com.huhehu.weijin.wechat.session.WeChatSession;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class MessageListModel extends AbstractListModel<WeChatMessage> implements WeChatSession.MessageListener {
+public class MessageListModel extends AbstractListModel<WeChatMessage> implements WeChatMessageHandler {
     private WeChatSession session;
     private WeChatContact contact;
+    private List<WeChatMessage> messages;
 
     public MessageListModel(WeChatSession session) {
         this.session = session;
-        session.addMessageListener(this);
+        this.session.setMessageHandler(this);
+        this.messages = new ArrayList<>();
+    }
+
+    public WeChatContact getContact() {
+        return contact;
     }
 
     public void setContact(WeChatContact contact) {
         if (this.contact != contact) {
             if (this.contact != null && getSize() > 0)
-                this.fireIntervalRemoved(contact, 0, getSize() - 1);
+                fireIntervalRemoved(contact, 0, getSize() - 1);
+
             this.contact = contact;
+
+            messages.clear();
+            messages.addAll(session.getMessages(contact));
             if (this.contact != null && getSize() > 0)
-                this.fireIntervalAdded(contact, 0, getSize() - 1);
+                fireIntervalAdded(contact, 0, getSize() - 1);
         }
     }
 
     @Override
     public int getSize() {
-        return contact == null ? 0 : session.getChat(contact).size();
+        return messages.size();
     }
 
     @Override
     public WeChatMessage getElementAt(int index) {
-        return contact == null ? null : session.getChat(contact).get(index);
+        return messages.get(index);
     }
 
     @Override
-    public void onMessageReceived(WeChatContact contact, WeChatMessage message) {
-        System.out.println("Message received");
-        if (contact.equals(this.contact)) {
-            fireIntervalAdded(message, session.getChat(contact).size() - 1, session.getChat(contact).size() - 1);
-        }
+    public void onMessageReceived(WeChatMessage... messages) {
+        SwingUtilities.invokeLater(() -> {
+            int count = 0;
+            int size = 0;
+
+            if (contact != null)
+                for (WeChatMessage message : messages) {
+                    if (contact.equals(message.getToUserName()) || contact.equals(message.getFromUserName())) {
+                        MessageListModel.this.messages.add(message);
+                        count++;
+                    }
+                }
+
+            if (count > 0) {
+                size = MessageListModel.this.messages.size();
+                fireIntervalAdded(MessageListModel.this.messages, size - count, size);
+            }
+        });
+    }
+
+    @Override
+    public void onChatSelected(WeChatContact contact) {
+        setContact(contact);
     }
 }
