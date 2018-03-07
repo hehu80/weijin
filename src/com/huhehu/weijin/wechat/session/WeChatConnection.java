@@ -19,8 +19,7 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.WeChatException;
@@ -44,8 +43,10 @@ import java.util.concurrent.Executors;
 
 import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
 import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
+import java.util.concurrent.ThreadFactory;
 
-public final class WeChatConnection extends Thread {
+public final class WeChatConnection {
+
     private static final String APP_ID = "wx782c26e4c19acffb";
     private static final String URL_QR_CODE_REQUEST = "https://login.web2.wechat.com/jslogin?appid=%s&redirect_uri=https://web2.wechat.com/cgi-bin/mmwebwx-bin/webwxnewloginpage&fun=new&lang=de_&_=%s";
     private static final String URL_QR_CODE_DOWNLOAD = "https://login.weixin.qq.com/qrcode/%s";
@@ -56,6 +57,7 @@ public final class WeChatConnection extends Thread {
     private static final String URL_SYNCHRONIZE = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxsync?sid=%s&skey=%s&pass_ticket=%s";
     private static final String URL_SEND_MESSAGE = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxsendmsg?lang=de_&pass_ticket=%s";
     private static final String URL_SYNCHRONIZE_CHECK = "https://webpush.web.wechat.com/cgi-bin/mmwebwx-bin/synccheck?r=1518496288126&skey=%s&sid=%s&uin=%s&deviceid=%s&synckey=%s&_=1518496248732";
+    private static final String URL_CONTACT_LIST = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxgetcontact?lang=de_&pass_ticket=%s&r=1518281986728&seq=0&skey=%s";
 
     static {
         System.setProperty("jsse.enableSNIExtension", "false");
@@ -71,11 +73,17 @@ public final class WeChatConnection extends Thread {
     private WeChatContact user;
     private WeChatSession session;
     private List<WeChatMessage> outbox = new ArrayList<>();
-    private ExecutorService eventHandler = Executors.newSingleThreadExecutor();
+    private ExecutorService eventHandler;
+    private ExecutorService updateHandler;
     private boolean stop;
 
     protected WeChatConnection(WeChatSession session) {
         this.session = session;
+
+        eventHandler = Executors.newSingleThreadExecutor(new WeChatSessionThreadFactory("WeChat-Event"));
+
+        updateHandler = Executors.newSingleThreadExecutor(new WeChatSessionThreadFactory("WeChat-Update"));
+        updateHandler.submit(new UpdateRunnable());
     }
 
     public synchronized boolean isConnected() {
@@ -90,9 +98,10 @@ public final class WeChatConnection extends Thread {
         outbox.clear();
     }
 
-    public synchronized void kill() {
+    public synchronized void shutdownNow() {
         stop = true;
-        eventHandler.shutdown();
+        updateHandler.shutdownNow();
+        eventHandler.shutdownNow();
     }
 
     public synchronized void sendMessage(WeChatMessage message) {
@@ -165,7 +174,9 @@ public final class WeChatConnection extends Thread {
         }
 
         if (json.has("SyncKey")) {
-            if (wxsynckey == null) wxsynckey = new HashMap<>();
+            if (wxsynckey == null) {
+                wxsynckey = new HashMap<>();
+            }
             for (Object key : json.getJSONObject("SyncKey").getJSONArray("List")) {
                 wxsynckey.put(((JSONObject) key).getLong("Key"), ((JSONObject) key).getLong("Val"));
             }
@@ -199,9 +210,7 @@ public final class WeChatConnection extends Thread {
                 WeChatMessage message = WeChatMessage.fromJson(json.getJSONArray("AddMsgList").getJSONObject(i));
                 if (message.getMsgType() == 51) {
                     final WeChatContact contact = new WeChatContact(user.equals(message.getToUserName()) ? message.getFromUserName() : message.getToUserName());
-                    eventHandler.submit(() -> {
-                        session.onChatSelected(contact);
-                    });
+                    eventHandler.submit(() -> session.onChatSelected(contact));
                 } else {
                     messages.add(message);
                 }
@@ -209,23 +218,19 @@ public final class WeChatConnection extends Thread {
         }
 
         if (!messages.isEmpty()) {
-            eventHandler.submit(() -> {
-                session.onMessageReceived(messages.toArray(new WeChatMessage[messages.size()]));
-            });
+            eventHandler.submit(() -> session.onMessageReceived(messages.toArray(new WeChatMessage[messages.size()])));
         }
     }
 
     private void retreiveContacts() throws IOException {
-        HttpsURLConnection connection = openConnection("https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxgetcontact?lang=de_&pass_ticket=" + wxpassticket + "&r=1518281986728&seq=0&skey=" + wxskey);
+        HttpsURLConnection connection = openConnection(String.format(URL_CONTACT_LIST, wxpassticket, wxskey));
 
         List<WeChatContact> contacts = new ArrayList<WeChatContact>();
         for (Object member : parseJSONResponse(connection).getJSONArray("MemberList")) {
             contacts.add(WeChatContact.fromJson((JSONObject) member));
         }
 
-        eventHandler.submit(() -> {
-            session.onContactUpdated(contacts.toArray(new WeChatContact[contacts.size()]));
-        });
+        eventHandler.submit(() -> session.onContactUpdated(contacts.toArray(new WeChatContact[contacts.size()])));
     }
 
     private boolean retrieveUserId() throws IOException {
@@ -299,62 +304,51 @@ public final class WeChatConnection extends Thread {
                 outbox.remove(0);
             }
 
-            eventHandler.submit(() -> {
-                session.onMessageReceived(message);
-            });
+            eventHandler.submit(() -> session.onMessageReceived(message));
         }
     }
 
-    public void run() {
-        while (!stop) {
-            if (!isConnected()) {
-                if (wxuuid == null) {
-                    try {
-                        if (retrieveUserId()) {
-                            eventHandler.submit(() -> {
-                                session.onQRCodeReceived(String.format(URL_QR_CODE_DOWNLOAD, wxuuid));
-                            });
-                        } else {
-                            session.onError(new WeChatException("failed to get QR code, try again later ..."));
+    private class UpdateRunnable implements Runnable {
+
+        public void run() {
+            while (!stop) {
+                if (!isConnected()) {
+                    if (wxuuid == null) {
+                        try {
+                            if (retrieveUserId()) {
+                                eventHandler.submit(() -> session.onQRCodeReceived(String.format(URL_QR_CODE_DOWNLOAD, wxuuid)));
+                            } else {
+                                session.onError(new WeChatException("failed to get QR code, try again later ..."));
+                            }
+                        } catch (IOException e) {
+                            disconnect();
+                            eventHandler.submit(() -> session.onError(e));
                         }
-                    } catch (IOException e) {
-                        disconnect();
-                        eventHandler.submit(() -> {
-                            session.onError(e);
-                        });
                     }
-                }
-                if (wxuuid != null) {
-                    try {
-                        if (retreiveUser()) {
-                            retreiveContacts();
-                            eventHandler.submit(() -> {
-                                session.onConnect(user);
-                            });
-                        } else {
-                            session.onError(new WeChatException("failed to get user, try again later ..."));
-                            // TODO reset QR code!!!!
+                    if (wxuuid != null) {
+                        try {
+                            if (retreiveUser()) {
+                                retreiveContacts();
+                                eventHandler.submit(() -> session.onConnect(user));
+                            } else {
+                                session.onError(new WeChatException("failed to get user, try again later ..."));
+                                // TODO reset QR code!!!!
+                            }
+                        } catch (IOException e) {
+                            disconnect();
+                            eventHandler.submit(() -> session.onError(e));
                         }
-                    } catch (IOException e) {
-                        disconnect();
-                        eventHandler.submit(() -> {
-                            session.onError(e);
-                        });
                     }
-                }
-            } else {
-                try {
-                    deliverOutbox();
-                    retrieveUpdates();
-                } catch (WeChatNotConnectedException e) {
-                    disconnect();
-                    eventHandler.submit(() -> {
-                        session.onDisconnect();
-                    });
-                } catch (IOException e) {
-                    eventHandler.submit(() -> {
-                        session.onError(e);
-                    });
+                } else {
+                    try {
+                        deliverOutbox();
+                        retrieveUpdates();
+                    } catch (WeChatNotConnectedException e) {
+                        disconnect();
+                        eventHandler.submit(() -> session.onDisconnect());
+                    } catch (IOException e) {
+                        eventHandler.submit(() -> session.onError(e));
+                    }
                 }
             }
         }

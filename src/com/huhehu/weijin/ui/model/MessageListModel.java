@@ -94,6 +94,6 @@ public class MessageListModel extends AbstractListModel<WeChatMessage> implement
 
     @Override
     public void onChatSelected(WeChatContact contact) {
-        setContact(contact);
+        SwingUtilities.invokeLater(() -> setContact(contact));
     }
 }

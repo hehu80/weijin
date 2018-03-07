@@ -55,6 +55,7 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
         BorderLayout layout = new BorderLayout();
         setLayout(layout);
         setTitle("WeiJin");
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         addWindowListener(this);
 
@@ -92,6 +93,7 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
     public void onQRCodeReceived(Image qrCode) {
         JLabel qrCodeLabel = new JLabel();
         qrCodeLabel.setIcon(new ImageIcon(qrCode));
+        qrCodeFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         qrCodeFrame.setTitle("Scan QR-Code to login");
         qrCodeFrame.getContentPane().add(qrCodeLabel);
         qrCodeFrame.setSize(qrCodeLabel.getMinimumSize().width, qrCodeLabel.getMinimumSize().height);
@@ -138,7 +140,7 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
             session.disconnect();
         } catch (Exception ignore) {
         }
-        qrCodeFrame.setVisible(false);
+        qrCodeFrame.dispose();
     }
 
     @Override

@@ -1,6 +1,10 @@
 /out/
 /lib/
+/dist/
+/build/
+/nbproject/private/
 .directory
 .idea/**/*
 *.iml
 qr*.jpeg
+/dist/

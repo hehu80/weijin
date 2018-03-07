@@ -63,10 +63,10 @@ public class ContactListModel extends AbstractListModel<WeChatContact> implement
                 int index = this.contacts.indexOf(contact);
                 if (index >= 0) {
                     this.contacts.set(index, contact);
-                    fireContentsChanged(contact, index, index); // TODO not thread-safe
+                    fireContentsChanged(contact, index, index); 
                 } else {
                     this.contacts.add(contact);
-                    fireIntervalAdded(contact, this.contacts.size() - 1, this.contacts.size() - 1); // TODO not thread-safe
+                    fireIntervalAdded(contact, this.contacts.size() - 1, this.contacts.size() - 1);
                 }
             }
         });

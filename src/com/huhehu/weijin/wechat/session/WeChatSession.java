@@ -19,8 +19,7 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.WeChatException;
@@ -39,6 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class WeChatSession {
+
     private WeChatConnection connection;
     private List<WeChatContact> contacts = new ArrayList<>();
     private Map<WeChatContact, Image> contactAvatars = new HashMap<>();
@@ -61,9 +61,7 @@ public class WeChatSession {
         }
 
         connection = new WeChatConnection(this);
-        connection.start();
-
-        mediaDownloader = Executors.newFixedThreadPool(5);
+        mediaDownloader = Executors.newFixedThreadPool(8, new WeChatSessionThreadFactory("WeChat-Media"));
     }
 
     public void disconnect() throws WeChatException {
@@ -71,10 +69,11 @@ public class WeChatSession {
             throw new WeChatException("not connected");
         }
 
-        connection.kill();
+        connection.shutdownNow();
         connection = null;
 
-        mediaDownloader.shutdown();
+        mediaDownloader.shutdownNow();
+        mediaDownloader = null;
     }
 
     public synchronized void sendMessage(WeChatMessage message) throws WeChatException {
@@ -127,9 +126,12 @@ public class WeChatSession {
     protected synchronized void onContactUpdated(WeChatContact... contacts) {
         for (WeChatContact contact : contacts) {
             int index = this.contacts.indexOf(contact);
+            boolean newAvatar = false;
             if (index >= 0) {
+                newAvatar = contact.getImageUrl() != null && !contact.getImageUrl().equals(this.contacts.get(index).getImageUrl());
                 this.contacts.set(index, contact);
             } else {
+                newAvatar = true;
                 this.contacts.add(contact);
             }
 
@@ -137,19 +139,21 @@ public class WeChatSession {
                 loginUser = contact;
             }
 
-            mediaDownloader.submit(() -> {
-                if (connection.isConnected()) {
-                    try (InputStream mediaStream = connection.downloadMedia(contact.getImageUrl())) {
-                        synchronized (WeChatSession.this) {
-                            contactAvatars.put(contact, ImageIO.read(mediaStream).getScaledInstance(64, 64, 0));
+            if (newAvatar) {
+                mediaDownloader.submit(() -> {
+                    if (connection.isConnected()) {
+                        try (InputStream mediaStream = connection.downloadMedia(contact.getImageUrl())) {
+                            synchronized (WeChatSession.this) {
+                                contactAvatars.put(contact, ImageIO.read(mediaStream).getScaledInstance(64, 64, 0));
+                            }
+                            if (contactHandler != null) {
+                                contactHandler.onContactUpdated(contact);
+                            }
+                        } catch (IOException ignore) {
                         }
-                        if (contactHandler != null) {
-                            contactHandler.onContactUpdated(contact);
-                        }
-                    } catch (IOException ignore) {
                     }
-                }
-            });
+                });
+            }
         }
 
         if (contactHandler != null) {
