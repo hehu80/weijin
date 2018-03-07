@@ -24,6 +24,7 @@ package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import static com.huhehu.weijin.wechat.contacts.WeChatUser.USER_FILE_HELPER;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 
 import javax.imageio.ImageIO;
@@ -181,12 +182,12 @@ public class WeChatSession {
         }
     }
 
-    public synchronized WeChatContact getUser() {
+    public synchronized WeChatContact getLoginUser() {
         return loginUser;
     }
 
     public synchronized WeChatContact getFileHelper() {
-        return getContact("filehelper");
+        return getContact(USER_FILE_HELPER);
     }
 
     public synchronized WeChatContact getContact(String userName) {

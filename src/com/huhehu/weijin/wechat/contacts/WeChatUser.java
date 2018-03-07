@@ -24,6 +24,8 @@
 package com.huhehu.weijin.wechat.contacts;
 
 public class WeChatUser extends WeChatContact {
+    public static String USER_FILE_HELPER = "filehelper";
+    
     private String alias;
     private String city;
     private String province;

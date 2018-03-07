@@ -27,11 +27,18 @@ import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import org.json.JSONObject;
 
 public class WeChatMessage {
+    public static int TYPE_TEXT = 1;
+    public static int TYPE_CHAT_CHANGE = 51;
+    public static int TYPE_AUDIO = 34;
+    public static int TYPE_IMAGE = 3;
+    public static int TYPE_FILE = 49;
+    public static int TYPE_REJECT_MESSAGE = 10002;
+    
     private String id;
     private String content;
     private String fromUserName;
     private String toUserName;
-    private int msgType; // 1: message, 51: change chat, 34: audio, 3: image, 49: file, 10002: reject message
+    private int msgType;
 
     public static WeChatMessage fromJson(JSONObject json) {
         WeChatMessage message = new WeChatMessage();

@@ -19,8 +19,7 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.ui;
 
 import com.huhehu.weijin.ui.model.ContactListModel;
@@ -41,12 +40,14 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSelectionListener, ActionListener, WindowListener {
+
     private ContactList contactList;
     private ContactListModel contactListModel;
     private MessageList messageList;
     private MessageListModel messageListModel;
     private JTextField messageField;
     private JFrame qrCodeFrame;
+    private JLabel qrCodeLabel;
     private WeChatSession session;
 
     public ChatWindow() throws WeChatException {
@@ -73,6 +74,10 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
         getContentPane().add(messageField, BorderLayout.PAGE_END);
 
         qrCodeFrame = new JFrame();
+        qrCodeLabel = new JLabel();
+        qrCodeFrame.getContentPane().add(qrCodeLabel);
+        qrCodeFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        qrCodeFrame.setTitle("Scan QR-Code to login");
 
         session.setSessionHandler(this);
         session.connect(); // TODO not in constructor
@@ -91,11 +96,7 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
 
     @Override
     public void onQRCodeReceived(Image qrCode) {
-        JLabel qrCodeLabel = new JLabel();
         qrCodeLabel.setIcon(new ImageIcon(qrCode));
-        qrCodeFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        qrCodeFrame.setTitle("Scan QR-Code to login");
-        qrCodeFrame.getContentPane().add(qrCodeLabel);
         qrCodeFrame.setSize(qrCodeLabel.getMinimumSize().width, qrCodeLabel.getMinimumSize().height);
         qrCodeFrame.setVisible(true);
     }
@@ -119,7 +120,7 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
     public void actionPerformed(ActionEvent actionEvent) {
         WeChatMessage message = new WeChatMessage();
         message.setToUserName(messageListModel.getContact());
-        message.setFromUserName(session.getUser());
+        message.setFromUserName(session.getLoginUser());
         message.setContent(messageField.getText());
 
         try {

@@ -44,6 +44,7 @@ import java.util.concurrent.Executors;
 import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
 import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
 import java.util.concurrent.ThreadFactory;
+import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
 
 public final class WeChatConnection {
 
@@ -63,6 +64,8 @@ public final class WeChatConnection {
         System.setProperty("jsse.enableSNIExtension", "false");
     }
 
+    private int readTimeout = 5000;
+    private int connectTimeout = 5000;
     private String wxskey;
     private String wxsid;
     private String wxuin;
@@ -84,6 +87,14 @@ public final class WeChatConnection {
 
         updateHandler = Executors.newSingleThreadExecutor(new WeChatSessionThreadFactory("WeChat-Update"));
         updateHandler.submit(new UpdateRunnable());
+    }
+
+    public void setReadTimeout(int readTimeout) {
+        this.readTimeout = readTimeout;
+    }
+
+    public void setConnectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
     }
 
     public synchronized boolean isConnected() {
@@ -118,6 +129,14 @@ public final class WeChatConnection {
 
     private synchronized HttpsURLConnection openConnection(String url) throws IOException {
         HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
+
+        if (readTimeout > 0) {
+            connection.setReadTimeout(readTimeout);
+        }
+        if (connectTimeout > 0) {
+            connection.setConnectTimeout(connectTimeout);
+        }
+
         if (isConnected()) {
             for (String s : wxcookies) {
                 connection.addRequestProperty("Cookie", s.substring(0, s.indexOf("; Domain")));
@@ -208,7 +227,7 @@ public final class WeChatConnection {
         if (json.has("AddMsgList")) {
             for (int i = 0; i < json.getJSONArray("AddMsgList").length(); i++) {
                 WeChatMessage message = WeChatMessage.fromJson(json.getJSONArray("AddMsgList").getJSONObject(i));
-                if (message.getMsgType() == 51) {
+                if (message.getMsgType() == TYPE_CHAT_CHANGE) {
                     final WeChatContact contact = new WeChatContact(user.equals(message.getToUserName()) ? message.getFromUserName() : message.getToUserName());
                     eventHandler.submit(() -> session.onChatSelected(contact));
                 } else {
@@ -332,7 +351,6 @@ public final class WeChatConnection {
                                 eventHandler.submit(() -> session.onConnect(user));
                             } else {
                                 session.onError(new WeChatException("failed to get user, try again later ..."));
-                                // TODO reset QR code!!!!
                             }
                         } catch (IOException e) {
                             disconnect();
