@@ -56,6 +56,7 @@ public class WeChatSession implements Serializable {
         connection = new WeChatConnection(this);
 
         mediaCache = new WeChatMediaCache(this);
+        mediaCache.loadAll();
     }
 
     public void disconnect() throws WeChatException {

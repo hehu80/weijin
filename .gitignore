@@ -2,6 +2,7 @@
 /lib/
 /dist/
 /build/
+/media/
 /nbproject/private/
 .directory
 .idea/**/*
