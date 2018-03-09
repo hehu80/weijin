@@ -19,8 +19,7 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.ui.model;
 
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
@@ -33,32 +32,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MessageListModel extends AbstractListModel<WeChatMessage> implements WeChatMessageHandler {
+
     private WeChatSession session;
     private WeChatContact contact;
     private List<WeChatMessage> messages;
 
     public MessageListModel(WeChatSession session) {
         this.session = session;
+        this.contact = session.getSelectedChat();
         this.session.setMessageHandler(this);
-        this.messages = new ArrayList<>();
+        this.messages = new ArrayList<>(session.getMessages(contact));
     }
 
-    public WeChatContact getContact() {
-        return contact;
-    }
-
-    public void setContact(WeChatContact contact) {
-        if (this.contact != contact) {
-            if (this.contact != null && getSize() > 0)
-                fireIntervalRemoved(contact, 0, getSize() - 1);
-
-            this.contact = contact;
-
-            messages.clear();
-            messages.addAll(session.getMessages(contact));
-            if (this.contact != null && getSize() > 0)
-                fireIntervalAdded(contact, 0, getSize() - 1);
-        }
+    public WeChatSession getSession() {
+        return session;
     }
 
     @Override
@@ -77,23 +64,33 @@ public class MessageListModel extends AbstractListModel<WeChatMessage> implement
             int count = 0;
             int size = 0;
 
-            if (contact != null)
+            if (contact != null) {
                 for (WeChatMessage message : messages) {
                     if (contact.equals(message.getToUserName()) || contact.equals(message.getFromUserName())) {
-                        MessageListModel.this.messages.add(message);
+                        this.messages.add(message);
                         count++;
                     }
                 }
+            }
 
             if (count > 0) {
-                size = MessageListModel.this.messages.size();
-                fireIntervalAdded(MessageListModel.this.messages, size - count, size);
+                size = this.messages.size();
+                fireIntervalAdded(this.messages, size - count, size);
             }
         });
     }
 
     @Override
-    public void onChatSelected(WeChatContact contact) {
-        SwingUtilities.invokeLater(() -> setContact(contact));
+    public void onMessageUpdated(WeChatMessage... messages) {
+        SwingUtilities.invokeLater(() -> {
+            for (WeChatMessage message : messages) {
+                int index = this.messages.indexOf(message);
+
+                if (index >= 0) {
+                    this.messages.set(index, message);
+                    fireContentsChanged(message, index, index);
+                }
+            }
+        });
     }
 }

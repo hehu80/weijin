@@ -19,11 +19,11 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat.contacts;
 
 public class WeChatGroup extends WeChatContact {
+
     private int memberCount;
     private int ownerUin;
 
@@ -31,16 +31,17 @@ public class WeChatGroup extends WeChatContact {
         return ownerUin;
     }
 
-    public void setOwnerUin(int ownerUin) {
+    public WeChatGroup setOwnerUin(int ownerUin) {
         this.ownerUin = ownerUin;
+        return this;
     }
 
     public int getMemberCount() {
         return memberCount;
     }
 
-    public void setMemberCount(int memberCount) {
+    public WeChatGroup setMemberCount(int memberCount) {
         this.memberCount = memberCount;
+        return this;
     }
-
 }

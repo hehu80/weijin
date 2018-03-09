@@ -38,13 +38,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSelectionListener, ActionListener, WindowListener {
 
     private ContactList contactList;
-    private ContactListModel contactListModel;
     private MessageList messageList;
-    private MessageListModel messageListModel;
     private JTextField messageField;
     private JFrame qrCodeFrame;
     private JLabel qrCodeLabel;
@@ -60,13 +62,11 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
 
         addWindowListener(this);
 
-        contactListModel = new ContactListModel(session);
-        contactList = new ContactList(contactListModel);
+        contactList = new ContactList(new ContactListModel(session));
         contactList.addListSelectionListener(this);
         getContentPane().add(new JScrollPane(contactList), BorderLayout.LINE_START);
 
-        messageListModel = new MessageListModel(session);
-        messageList = new MessageList(messageListModel);
+        messageList = new MessageList(new MessageListModel(session));
         getContentPane().add(new JScrollPane(messageList), BorderLayout.CENTER);
 
         messageField = new JTextField();
@@ -108,18 +108,26 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
 
     @Override
     public void onDisconnect() {
+    }
 
+    @Override
+    public void onChatSelected(WeChatContact contact) {
+        SwingUtilities.invokeLater(() -> contactList.setSelectedValue(contact, true));
     }
 
     @Override
     public void valueChanged(ListSelectionEvent event) {
-        messageListModel.setContact(contactListModel.getElementAt(contactList.getSelectedIndex()));
+        try {
+            session.selectChat(contactList.getSelectedValue());
+            messageList.setModel(new MessageListModel(session));
+        } catch (WeChatException ignore) {
+        }
     }
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
         WeChatMessage message = new WeChatMessage();
-        message.setToUserName(messageListModel.getContact());
+        message.setToUserName(contactList.getSelectedValue());
         message.setFromUserName(session.getLoginUser());
         message.setContent(messageField.getText());
 
@@ -132,7 +140,6 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
 
     @Override
     public void windowOpened(WindowEvent windowEvent) {
-
     }
 
     @Override
@@ -146,26 +153,21 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
 
     @Override
     public void windowClosed(WindowEvent windowEvent) {
-
     }
 
     @Override
     public void windowIconified(WindowEvent windowEvent) {
-
     }
 
     @Override
     public void windowDeiconified(WindowEvent windowEvent) {
-
     }
 
     @Override
     public void windowActivated(WindowEvent windowEvent) {
-
     }
 
     @Override
     public void windowDeactivated(WindowEvent windowEvent) {
-
     }
 }

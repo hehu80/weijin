@@ -19,8 +19,7 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.ui;
 
 import com.huhehu.weijin.ui.model.ContactListModel;
@@ -30,18 +29,24 @@ import javax.swing.*;
 import java.awt.*;
 
 public class ContactList extends JList<WeChatContact> {
+
     public ContactList(ContactListModel model) {
         super(model);
         setCellRenderer(new ContactCellRenderer());
     }
 
     private class ContactCellRenderer extends DefaultListCellRenderer {
-        public Component getListCellRendererComponent(JList list, Object contact, int i, boolean b, boolean b1) {
-            super.getListCellRendererComponent(list, contact, i, b, b1);
-            setText(((WeChatContact) contact).getNickName());
-            if ((((ContactListModel) getModel()).getAvatar((WeChatContact) contact)) != null) {
-                setIcon(new ImageIcon((((ContactListModel) getModel()).getAvatar((WeChatContact) contact))));
 
+        @Override
+        public Component getListCellRendererComponent(JList list, Object contact, int i, boolean b, boolean b1) {
+            return getListCellRendererComponent(list, (ContactListModel) getModel(), (WeChatContact) contact, i, b, b1);
+        }
+
+        private Component getListCellRendererComponent(JList list, ContactListModel model, WeChatContact contact, int i, boolean b, boolean b1) {
+            super.getListCellRendererComponent(list, contact, i, b, b1);
+            setText(contact.getNickName());
+            if (model.getSession().getMediaCache().getMedia(contact) != null) {
+                setIcon(new ImageIcon(model.getSession().getMediaCache().getMedia(contact)));
             }
             return this;
         }

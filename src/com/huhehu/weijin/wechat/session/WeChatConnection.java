@@ -24,6 +24,7 @@ package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.WeChatNotConnectedException;
+import com.huhehu.weijin.wechat.WeChatObject;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import org.json.JSONArray;
@@ -45,27 +46,28 @@ import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
 import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
 import java.util.concurrent.ThreadFactory;
 import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
+import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_FILE;
+import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_IMAGE;
 
 public final class WeChatConnection {
 
     private static final String APP_ID = "wx782c26e4c19acffb";
-    private static final String URL_QR_CODE_REQUEST = "https://login.web2.wechat.com/jslogin?appid=%s&redirect_uri=https://web2.wechat.com/cgi-bin/mmwebwx-bin/webwxnewloginpage&fun=new&lang=de_&_=%s";
-    private static final String URL_QR_CODE_DOWNLOAD = "https://login.weixin.qq.com/qrcode/%s";
-    private static final String URL_MEDIA_DOWNLOAD = "https://web.wechat.com%s";
-    private static final String URL_LOGIN_1 = "https://login.web2.wechat.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid=%s&tip=1&r=2145092312&_=1518273329652";
-    private static final String URL_LOGIN_2 = "https://login.web.wechat.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid=%s&tip=0&r=2145092312&_=1518273329652";
-    private static final String URL_INIT = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxinit?r=1922173868&lang=de_&pass_ticket=%s";
-    private static final String URL_SYNCHRONIZE = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxsync?sid=%s&skey=%s&pass_ticket=%s";
-    private static final String URL_SEND_MESSAGE = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxsendmsg?lang=de_&pass_ticket=%s";
-    private static final String URL_SYNCHRONIZE_CHECK = "https://webpush.web.wechat.com/cgi-bin/mmwebwx-bin/synccheck?r=1518496288126&skey=%s&sid=%s&uin=%s&deviceid=%s&synckey=%s&_=1518496248732";
-    private static final String URL_CONTACT_LIST = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxgetcontact?lang=de_&pass_ticket=%s&r=1518281986728&seq=0&skey=%s";
+    protected static final String URL_QR_CODE_DOWNLOAD = "https://login.weixin.qq.com/qrcode/%s";
+    protected static final String URL_QR_CODE_REQUEST = "https://login.web2.wechat.com/jslogin?appid=%s&redirect_uri=https://web2.wechat.com/cgi-bin/mmwebwx-bin/webwxnewloginpage&fun=new&lang=de_&_=%s";
+    protected static final String URL_LOGIN_1 = "https://login.web2.wechat.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid=%s&tip=1&r=2145092312&_=1518273329652";
+    protected static final String URL_LOGIN_2 = "https://login.web.wechat.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid=%s&tip=0&r=2145092312&_=1518273329652";
+    protected static final String URL_INIT = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxinit?r=1922173868&lang=de_&pass_ticket=%s";
+    protected static final String URL_SYNCHRONIZE = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxsync?sid=%s&skey=%s&pass_ticket=%s";
+    protected static final String URL_SEND_MESSAGE = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxsendmsg?lang=de_&pass_ticket=%s";
+    protected static final String URL_SYNCHRONIZE_CHECK = "https://webpush.web.wechat.com/cgi-bin/mmwebwx-bin/synccheck?r=1518496288126&skey=%s&sid=%s&uin=%s&deviceid=%s&synckey=%s&_=1518496248732";
+    protected static final String URL_CONTACT_LIST = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxgetcontact?lang=de_&pass_ticket=%s&r=1518281986728&seq=0&skey=%s";
 
     static {
         System.setProperty("jsse.enableSNIExtension", "false");
     }
 
-    private int readTimeout = 5000;
-    private int connectTimeout = 5000;
+    private int readTimeout = 0;
+    private int connectTimeout = 2000;
     private String wxskey;
     private String wxsid;
     private String wxuin;
@@ -89,12 +91,18 @@ public final class WeChatConnection {
         updateHandler.submit(new UpdateRunnable());
     }
 
-    public void setReadTimeout(int readTimeout) {
+    public WeChatConnection setReadTimeout(int readTimeout) {
         this.readTimeout = readTimeout;
+        return this;
     }
 
-    public void setConnectTimeout(int connectTimeout) {
+    public WeChatConnection setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
+        return this;
+    }
+
+    protected String getSessionKey() {
+        return wxskey;
     }
 
     public synchronized boolean isConnected() {
@@ -109,25 +117,18 @@ public final class WeChatConnection {
         outbox.clear();
     }
 
-    public synchronized void shutdownNow() {
+    protected synchronized void shutdownNow() {
         stop = true;
         updateHandler.shutdownNow();
         eventHandler.shutdownNow();
     }
 
-    public synchronized void sendMessage(WeChatMessage message) {
+    protected synchronized WeChatConnection sendMessage(WeChatMessage message) {
         outbox.add(message);
+        return this;
     }
 
-    public synchronized InputStream downloadMedia(String url) throws IOException {
-        if (url.startsWith("/")) {
-            return openConnection(String.format(URL_MEDIA_DOWNLOAD, url)).getInputStream();
-        } else {
-            return openConnection(url).getInputStream();
-        }
-    }
-
-    private synchronized HttpsURLConnection openConnection(String url) throws IOException {
+    protected synchronized HttpsURLConnection openConnection(String url) throws IOException {
         HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
 
         if (readTimeout > 0) {
@@ -225,6 +226,9 @@ public final class WeChatConnection {
 
         List<WeChatMessage> messages = new ArrayList<>();
         if (json.has("AddMsgList")) {
+            if (json.getJSONArray("AddMsgList").length() > 0) {
+                System.out.println(json.toString());
+            }
             for (int i = 0; i < json.getJSONArray("AddMsgList").length(); i++) {
                 WeChatMessage message = WeChatMessage.fromJson(json.getJSONArray("AddMsgList").getJSONObject(i));
                 if (message.getMsgType() == TYPE_CHAT_CHANGE) {
@@ -309,7 +313,7 @@ public final class WeChatConnection {
 
             message.setId("" + System.currentTimeMillis());
             JSONObject json = new JSONObject();
-            json.put("Type", 1);
+            json.put("Type", message.getMsgType() == 0 ? 1 : message.getMsgType());
             json.put("Content", message.getContent());
             json.put("FromUserName", user.getUserName());
             json.put("ToUserName", message.getToUserName());
@@ -335,7 +339,7 @@ public final class WeChatConnection {
                     if (wxuuid == null) {
                         try {
                             if (retrieveUserId()) {
-                                eventHandler.submit(() -> session.onQRCodeReceived(String.format(URL_QR_CODE_DOWNLOAD, wxuuid)));
+                                session.onQRCodeReceived(String.format(URL_QR_CODE_DOWNLOAD, wxuuid));
                             } else {
                                 session.onError(new WeChatException("failed to get QR code, try again later ..."));
                             }
@@ -347,8 +351,8 @@ public final class WeChatConnection {
                     if (wxuuid != null) {
                         try {
                             if (retreiveUser()) {
-                                retreiveContacts();
                                 eventHandler.submit(() -> session.onConnect(user));
+                                retreiveContacts();
                             } else {
                                 session.onError(new WeChatException("failed to get user, try again later ..."));
                             }

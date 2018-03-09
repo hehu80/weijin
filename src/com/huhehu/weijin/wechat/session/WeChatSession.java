@@ -26,31 +26,23 @@ import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import static com.huhehu.weijin.wechat.contacts.WeChatUser.USER_FILE_HELPER;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public class WeChatSession {
+public class WeChatSession implements Serializable {
 
-    private WeChatConnection connection;
+    private transient WeChatConnection connection;
+    private transient WeChatMediaCache mediaCache;
     private List<WeChatContact> contacts = new ArrayList<>();
-    private Map<WeChatContact, Image> contactAvatars = new HashMap<>();
     private Map<WeChatContact, List<WeChatMessage>> chats = new HashMap<>();
-    private Image qrCode;
     private WeChatContact loginUser;
-    private WeChatContact activeUser;
-    private ExecutorService mediaDownloader;
-    private WeChatContactHandler contactHandler;
-    private WeChatMessageHandler messageHandler;
-    private WeChatSessionHandler sessionHandler;
+    private WeChatContact selectedChat;
+    private transient WeChatContactHandler contactHandler;
+    private transient WeChatMessageHandler messageHandler;
+    private transient WeChatSessionHandler sessionHandler;
 
     public boolean isConnected() {
         return connection != null && connection.isConnected();
@@ -62,7 +54,8 @@ public class WeChatSession {
         }
 
         connection = new WeChatConnection(this);
-        mediaDownloader = Executors.newFixedThreadPool(8, new WeChatSessionThreadFactory("WeChat-Media"));
+
+        mediaCache = new WeChatMediaCache(this);
     }
 
     public void disconnect() throws WeChatException {
@@ -73,8 +66,8 @@ public class WeChatSession {
         connection.shutdownNow();
         connection = null;
 
-        mediaDownloader.shutdownNow();
-        mediaDownloader = null;
+        mediaCache.shutdownNow();
+        mediaCache = null;
     }
 
     public synchronized void sendMessage(WeChatMessage message) throws WeChatException {
@@ -85,28 +78,16 @@ public class WeChatSession {
         connection.sendMessage(message);
     }
 
+    public synchronized void selectChat(WeChatContact contact) throws WeChatException {
+        if (selectedChat == null || !selectedChat.equals(contact)) {
+            onChatSelected(contact);
+        }
+    }
+
     protected synchronized void onError(Exception e) {
         if (sessionHandler != null) {
             sessionHandler.onError(e);
         }
-    }
-
-    protected synchronized void onQRCodeReceived(String url) {
-        mediaDownloader.submit(() -> {
-            if (!connection.isConnected()) {
-                try (InputStream mediaStream = connection.downloadMedia(url)) {
-                    synchronized (WeChatSession.this) {
-                        WeChatSession.this.qrCode = ImageIO.read(mediaStream);
-                    }
-
-                    if (sessionHandler != null) {
-                        sessionHandler.onQRCodeReceived(WeChatSession.this.qrCode);
-                    }
-                } catch (IOException ignore) {
-                }
-            }
-        });
-
     }
 
     protected synchronized void onMessageReceived(WeChatMessage... messages) {
@@ -117,6 +98,14 @@ public class WeChatSession {
                 chats.put(contact, new ArrayList<>());
             }
             chats.get(contact).add(message);
+
+            if (mediaCache.isMediaMessage(message)) {
+                mediaCache.downloadMedia(message, true, () -> {
+                    if (messageHandler != null) {
+                        messageHandler.onMessageUpdated(message);
+                    }
+                });
+            }
         }
 
         if (messageHandler != null) {
@@ -132,29 +121,14 @@ public class WeChatSession {
                 newAvatar = contact.getImageUrl() != null && !contact.getImageUrl().equals(this.contacts.get(index).getImageUrl());
                 this.contacts.set(index, contact);
             } else {
-                newAvatar = true;
                 this.contacts.add(contact);
             }
 
-            if (contact.equals(loginUser)) {
-                loginUser = contact;
-            }
-
-            if (newAvatar) {
-                mediaDownloader.submit(() -> {
-                    if (connection.isConnected()) {
-                        try (InputStream mediaStream = connection.downloadMedia(contact.getImageUrl())) {
-                            synchronized (WeChatSession.this) {
-                                contactAvatars.put(contact, ImageIO.read(mediaStream).getScaledInstance(64, 64, 0));
-                            }
-                            if (contactHandler != null) {
-                                contactHandler.onContactUpdated(contact);
-                            }
-                        } catch (IOException ignore) {
-                        }
-                    }
-                });
-            }
+            mediaCache.downloadMedia(contact, newAvatar, () -> {
+                if (contactHandler != null) {
+                    contactHandler.onContactUpdated(contact);
+                }
+            });
         }
 
         if (contactHandler != null) {
@@ -163,9 +137,11 @@ public class WeChatSession {
     }
 
     protected synchronized void onChatSelected(WeChatContact contact) {
-        activeUser = getContact(contact);
-        if (messageHandler != null) {
-            messageHandler.onChatSelected(activeUser);
+        if (selectedChat == null || !selectedChat.equals(contact)) {
+            selectedChat = getContact(contact);
+            if (sessionHandler != null) {
+                sessionHandler.onChatSelected(selectedChat);
+            }
         }
     }
 
@@ -182,8 +158,22 @@ public class WeChatSession {
         }
     }
 
+    protected synchronized void onQRCodeReceived(String url) {
+        mediaCache.downloadMedia("qrCode", true, false, url, () -> {
+            if (!connection.isConnected()) {
+                if (sessionHandler != null) {
+                    sessionHandler.onQRCodeReceived(mediaCache.getMedia("qrCode"));
+                }
+            }
+        });
+    }
+
     public synchronized WeChatContact getLoginUser() {
-        return loginUser;
+        return getContact(loginUser);
+    }
+
+    public synchronized WeChatContact getSelectedChat() {
+        return getContact(selectedChat);
     }
 
     public synchronized WeChatContact getFileHelper() {
@@ -195,16 +185,16 @@ public class WeChatSession {
     }
 
     public synchronized WeChatContact getContact(WeChatContact contact) {
-        int index = contacts.indexOf(contact);
-        if (index >= 0) {
-            return contacts.get(index);
+        if (contact == null) {
+            return null;
         } else {
-            return contact;
+            int index = contacts.indexOf(contact);
+            if (index >= 0) {
+                return contacts.get(index);
+            } else {
+                return contact;
+            }
         }
-    }
-
-    public synchronized Image getContactAvatar(WeChatContact contact) {
-        return contactAvatars.get(contact);
     }
 
     public synchronized List<WeChatContact> getContacts() {
@@ -219,15 +209,26 @@ public class WeChatSession {
         }
     }
 
-    public void setContactHandler(WeChatContactHandler contactHandler) {
+    public WeChatConnection getConnection() {
+        return connection;
+    }
+
+    public WeChatMediaCache getMediaCache() {
+        return mediaCache;
+    }
+
+    public WeChatSession setContactHandler(WeChatContactHandler contactHandler) {
         this.contactHandler = contactHandler;
+        return this;
     }
 
-    public void setMessageHandler(WeChatMessageHandler messageHandler) {
+    public WeChatSession setMessageHandler(WeChatMessageHandler messageHandler) {
         this.messageHandler = messageHandler;
+        return this;
     }
 
-    public void setSessionHandler(WeChatSessionHandler sessionHandler) {
+    public WeChatSession setSessionHandler(WeChatSessionHandler sessionHandler) {
         this.sessionHandler = sessionHandler;
+        return this;
     }
 }

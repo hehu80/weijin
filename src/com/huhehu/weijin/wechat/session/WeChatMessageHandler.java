@@ -19,15 +19,15 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 
 public interface WeChatMessageHandler {
+
     void onMessageReceived(WeChatMessage... messages);
 
-    void onChatSelected(WeChatContact contact);
+    void onMessageUpdated(WeChatMessage... messages);
 }

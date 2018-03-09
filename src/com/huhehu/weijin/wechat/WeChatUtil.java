@@ -19,8 +19,7 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat;
 
 import java.io.IOException;
@@ -33,19 +32,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public final class WeChatUtil {
+
     private WeChatUtil() {
-    }
-
-    public static void downloadImageFromUrl(String imageUrl, String fileName) throws IOException {
-        URL url = new URL(imageUrl);
-        URLConnection connection = url.openConnection();
-        downloadImageFromUrl(connection, fileName);
-    }
-
-    public static void downloadImageFromUrl(URLConnection connection, String fileName) throws IOException {
-        try (InputStream input = connection.getInputStream()) {
-            Files.copy(input, Paths.get(fileName));
-        }
     }
 
     public static String getStringFromInputStream(URLConnection connection, String charsetName) throws IOException {

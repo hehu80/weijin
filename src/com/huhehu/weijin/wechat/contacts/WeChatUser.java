@@ -19,13 +19,13 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat.contacts;
 
 public class WeChatUser extends WeChatContact {
+
     public static String USER_FILE_HELPER = "filehelper";
-    
+
     private String alias;
     private String city;
     private String province;
@@ -35,33 +35,35 @@ public class WeChatUser extends WeChatContact {
         return sex;
     }
 
-    public void setSex(int sex) {
+    public WeChatUser setSex(int sex) {
         this.sex = sex;
+        return this;
     }
 
     public String getAlias() {
         return alias;
     }
 
-    public void setAlias(String alias) {
+    public WeChatUser setAlias(String alias) {
         this.alias = alias;
+        return this;
     }
 
     public String getCity() {
         return city;
     }
 
-    public void setCity(String city) {
+    public WeChatUser setCity(String city) {
         this.city = city;
+        return this;
     }
 
     public String getProvince() {
         return province;
     }
 
-    public void setProvince(String province) {
+    public WeChatUser setProvince(String province) {
         this.province = province;
+        return this;
     }
-
-
 }

@@ -19,8 +19,7 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
@@ -28,6 +27,7 @@ import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import java.awt.*;
 
 public interface WeChatSessionHandler {
+
     void onError(Exception e);
 
     void onQRCodeReceived(Image qrCode);
@@ -35,4 +35,6 @@ public interface WeChatSessionHandler {
     void onConnect(WeChatContact user);
 
     void onDisconnect();
+
+    void onChatSelected(WeChatContact contact);
 }

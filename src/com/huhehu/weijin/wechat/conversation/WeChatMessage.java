@@ -19,21 +19,25 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat.conversation;
 
+import com.huhehu.weijin.wechat.WeChatObject;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import java.awt.Image;
+import java.io.Serializable;
+import java.util.Objects;
 import org.json.JSONObject;
 
-public class WeChatMessage {
+public class WeChatMessage extends WeChatObject implements Serializable {
+
     public static int TYPE_TEXT = 1;
     public static int TYPE_CHAT_CHANGE = 51;
     public static int TYPE_AUDIO = 34;
     public static int TYPE_IMAGE = 3;
     public static int TYPE_FILE = 49;
     public static int TYPE_REJECT_MESSAGE = 10002;
-    
+
     private String id;
     private String content;
     private String fromUserName;
@@ -103,5 +107,10 @@ public class WeChatMessage {
     public WeChatMessage setMsgType(int msgType) {
         this.msgType = msgType;
         return this;
+    }
+
+    @Override
+    public String getWeChatId() {
+        return id;
     }
 }

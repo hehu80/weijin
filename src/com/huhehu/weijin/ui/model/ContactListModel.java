@@ -41,9 +41,9 @@ public class ContactListModel extends AbstractListModel<WeChatContact> implement
         this.session.setContactHandler(this);
         this.contacts = new ArrayList<>(session.getContacts());
     }
-
-    public Image getAvatar(WeChatContact contact) {
-        return session.getContactAvatar(contact);
+    
+    public WeChatSession getSession(){
+        return session;
     }
 
     @Override

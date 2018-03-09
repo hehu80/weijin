@@ -19,16 +19,27 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.wechat.contacts;
 
+import com.huhehu.weijin.wechat.WeChatObject;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Objects;
+import javax.imageio.ImageIO;
+import sun.awt.image.ToolkitImage;
 
-public class WeChatContact implements Serializable {
+public class WeChatContact extends WeChatObject implements Serializable {
+
     private long uin;
     private String userName;
     private String nickName;
@@ -41,7 +52,6 @@ public class WeChatContact implements Serializable {
     private String pinYinQuanPin;
 
     public WeChatContact() {
-
     }
 
     public WeChatContact(String userName) {
@@ -59,9 +69,6 @@ public class WeChatContact implements Serializable {
         } else {
             WeChatUser user = new WeChatUser();
             user.setSex(json.getInt("Sex"));
-//            user.setAlias(json.getString("Alias"));
-//            user.setCity(json.getString("City"));
-//            user.setProvince(json.getString("Province"));
             contact = user;
         }
         contact.setUin(json.getLong("Uin"));
@@ -81,109 +88,94 @@ public class WeChatContact implements Serializable {
         return uin;
     }
 
-    public void setUin(long uin) {
+    public WeChatContact setUin(long uin) {
         this.uin = uin;
+        return this;
     }
 
     public String getUserName() {
         return userName;
     }
 
-    public void setUserName(String userName) {
+    public WeChatContact setUserName(String userName) {
         this.userName = userName;
+        return this;
     }
 
     public String getNickName() {
         return nickName;
     }
 
-    public void setNickName(String nickName) {
+    public WeChatContact setNickName(String nickName) {
         this.nickName = nickName;
+        return this;
     }
 
     public String getImageUrl() {
         return imageUrl;
     }
 
-    public void setImageUrl(String imageUrl) {
+    public WeChatContact setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+        return this;
     }
 
     public int getContactFlag() {
         return contactFlag;
     }
 
-    public void setContactFlag(int contactFlag) {
+    public WeChatContact setContactFlag(int contactFlag) {
         this.contactFlag = contactFlag;
+        return this;
     }
-
 
     public String getRemarkName() {
         return remarkName;
     }
 
-    public void setRemarkName(String remarkName) {
+    public WeChatContact setRemarkName(String remarkName) {
         this.remarkName = remarkName;
+        return this;
     }
 
     public String getSignature() {
         return signature;
     }
 
-    public void setSignature(String signature) {
+    public WeChatContact setSignature(String signature) {
         this.signature = signature;
+        return this;
     }
 
     public int getVerifyFlag() {
         return verifyFlag;
     }
 
-    public void setVerifyFlag(int verifyFlag) {
+    public WeChatContact setVerifyFlag(int verifyFlag) {
         this.verifyFlag = verifyFlag;
+        return this;
     }
-
 
     public String getPinYinInitial() {
         return pinYinInitial;
     }
 
-    public void setPinYinInitial(String pinYinInitial) {
+    public WeChatContact setPinYinInitial(String pinYinInitial) {
         this.pinYinInitial = pinYinInitial;
+        return this;
     }
 
     public String getPinYinQuanPin() {
         return pinYinQuanPin;
     }
 
-    public void setPinYinQuanPin(String pinYinQuanPin) {
+    public WeChatContact setPinYinQuanPin(String pinYinQuanPin) {
         this.pinYinQuanPin = pinYinQuanPin;
+        return this;
     }
 
     @Override
-    public String toString() {
-        if (userName != null) {
-            return userName.toString();
-        } else
-            return super.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        } else if (o == this) {
-            return true;
-        } else if (o instanceof String) {
-            return userName != null && userName.equals(o);
-        } else if (o instanceof WeChatContact) {
-            return userName != null && userName.equals(((WeChatContact) o).userName);
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(userName);
+    public String getWeChatId() {
+        return userName;
     }
 }

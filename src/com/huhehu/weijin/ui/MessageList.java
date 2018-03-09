@@ -19,26 +19,37 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
-*/
-
+ */
 package com.huhehu.weijin.ui;
 
+import com.huhehu.weijin.ui.model.ContactListModel;
 import com.huhehu.weijin.ui.model.MessageListModel;
+import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class MessageList extends JList<WeChatMessage> {
+
     public MessageList(MessageListModel model) {
         super(model);
         setCellRenderer(new MessageCellRenderer());
     }
 
     private class MessageCellRenderer extends DefaultListCellRenderer {
+
+        @Override
         public Component getListCellRendererComponent(JList list, Object message, int i, boolean b, boolean b1) {
+            return getListCellRendererComponent(list, (MessageListModel) getModel(), (WeChatMessage) message, i, b, b1);
+        }
+
+        private Component getListCellRendererComponent(JList list, MessageListModel model, WeChatMessage message, int i, boolean b, boolean b1) {
             super.getListCellRendererComponent(list, message, i, b, b1);
-            setText(((WeChatMessage) message).getContent());
+            setText(message.getContent());
+            if(model.getSession().getMediaCache().getMedia(message) != null){
+                setIcon(new ImageIcon(model.getSession().getMediaCache().getMedia(message)));
+            }
             return this;
         }
     }

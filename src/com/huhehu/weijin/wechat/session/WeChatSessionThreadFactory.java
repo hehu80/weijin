@@ -12,17 +12,18 @@ import java.util.concurrent.ThreadFactory;
  * @author henning
  */
 public class WeChatSessionThreadFactory implements ThreadFactory {
+
     private String identifier;
     private int index;
     
-    public WeChatSessionThreadFactory(String identifier){
+    public WeChatSessionThreadFactory(String identifier) {
         this.identifier = identifier;
     }
-
+    
     @Override
     public Thread newThread(Runnable r) {
         Thread thread = new Thread(r);
         thread.setName(identifier + "-" + ++index);
         return thread;
-    }       
+    }    
 }
