@@ -24,16 +24,14 @@ package com.huhehu.weijin.ui.model;
 
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
-import com.huhehu.weijin.wechat.session.WeChatMessageHandler;
 import com.huhehu.weijin.wechat.session.WeChatSession;
 import javafx.application.Platform;
-import javafx.collections.ObservableListBase;
 
 /**
  *
  * @author henning
  */
-public class MessageListModel extends ObservableListModel<WeChatMessage> implements WeChatMessageHandler {
+public class MessageListModel extends ObservableListModel<WeChatMessage> {
 
     private WeChatSession session;
     private WeChatContact contact;
@@ -42,36 +40,33 @@ public class MessageListModel extends ObservableListModel<WeChatMessage> impleme
         super(session.getMessages(session.getSelectedChat()));
         this.session = session;
         this.contact = session.getSelectedChat();
-        this.session.setMessageHandler(this);
-    }
 
-    @Override
-    public void onMessageReceived(WeChatMessage... messages) {
-        Platform.runLater(() -> {
-            beginChange();
-            if (contact != null) {
-                for (WeChatMessage message : messages) {
-                    if (contact.equals(message.getToUserName()) || contact.equals(message.getFromUserName())) {
-                        add(message);
+        this.session.setOnMessageReceived((messages) -> {
+            Platform.runLater(() -> {
+                beginChange();
+                if (contact != null) {
+                    for (WeChatMessage message : messages) {
+                        if (contact.equals(message.getToUserName()) || contact.equals(message.getFromUserName())) {
+                            add(message);
+                        }
                     }
                 }
-            }
-            endChange();
+                endChange();
+            });
         });
-    }
 
-    @Override
-    public void onMessageUpdated(WeChatMessage... messages) {
-        Platform.runLater(() -> {
-            for (WeChatMessage message : messages) {
-                int index = indexOf(message);
+        this.session.setOnMessageUpdated((messages) -> {
+            Platform.runLater(() -> {
+                for (WeChatMessage message : messages) {
+                    int index = indexOf(message);
 
-                if (index >= 0) {
-                    beginChange();
-                    set(index, message);
-                    endChange();
+                    if (index >= 0) {
+                        beginChange();
+                        set(index, message);
+                        endChange();
+                    }
                 }
-            }
+            });
         });
     }
 }

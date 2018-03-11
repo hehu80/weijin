@@ -24,9 +24,7 @@ package com.huhehu.weijin.wechat.conversation;
 
 import com.huhehu.weijin.wechat.WeChatObject;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
-import java.awt.Image;
 import java.io.Serializable;
-import java.util.Objects;
 import org.json.JSONObject;
 
 public class WeChatMessage extends WeChatObject implements Serializable {

@@ -26,11 +26,15 @@ import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import static com.huhehu.weijin.wechat.contacts.WeChatUser.USER_FILE_HELPER;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
+import com.huhehu.weijin.wechat.session.event.WeChatMultiEventHandler;
+import com.huhehu.weijin.wechat.session.event.WeChatSingleEventHandler;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javafx.scene.image.Image;
 
 public class WeChatSession implements Serializable {
 
@@ -39,10 +43,16 @@ public class WeChatSession implements Serializable {
     private List<WeChatContact> contacts = new ArrayList<>();
     private Map<WeChatContact, List<WeChatMessage>> chats = new HashMap<>();
     private WeChatContact loginUser;
+    private WeChatContact logoutUser;
     private WeChatContact selectedChat;
-    private transient WeChatContactHandler contactHandler;
-    private transient WeChatMessageHandler messageHandler;
-    private transient WeChatSessionHandler sessionHandler;
+    private transient WeChatMultiEventHandler<WeChatContact> onContactUpdated;
+    private transient WeChatMultiEventHandler<WeChatMessage> onMessageReceived;
+    private transient WeChatMultiEventHandler<WeChatMessage> onMessageUpdated;
+    private transient WeChatMultiEventHandler<Exception> onSessionError;
+    private transient WeChatSingleEventHandler<Image> onSessionQRCodeReceived;
+    private transient WeChatSingleEventHandler<WeChatContact> onSessionConnect;
+    private transient WeChatSingleEventHandler<WeChatContact> onSessionDisconnect;
+    private transient WeChatSingleEventHandler<WeChatContact> onSessionChatSelected;
 
     public boolean isConnected() {
         return connection != null && connection.isConnected();
@@ -84,9 +94,7 @@ public class WeChatSession implements Serializable {
     }
 
     protected synchronized void onError(Exception e) {
-        if (sessionHandler != null) {
-            sessionHandler.onError(e);
-        }
+        fireEvents(onSessionError, e);
     }
 
     protected synchronized void onMessageReceived(WeChatMessage... messages) {
@@ -99,17 +107,11 @@ public class WeChatSession implements Serializable {
             chats.get(contact).add(message);
 
             if (mediaCache.isMediaMessage(message)) {
-                mediaCache.downloadMedia(message, true, () -> {
-                    if (messageHandler != null) {
-                        messageHandler.onMessageUpdated(message);
-                    }
-                });
+                mediaCache.downloadMedia(message, true, () -> fireEvents(onMessageUpdated, message));
             }
         }
 
-        if (messageHandler != null) {
-            messageHandler.onMessageReceived(messages);
-        }
+        fireEvents(onMessageReceived, messages);
     }
 
     protected synchronized void onContactUpdated(WeChatContact... contacts) {
@@ -123,46 +125,33 @@ public class WeChatSession implements Serializable {
                 this.contacts.add(contact);
             }
 
-            mediaCache.downloadMedia(contact, newAvatar, () -> {
-                if (contactHandler != null) {
-                    contactHandler.onContactUpdated(contact);
-                }
-            });
+            mediaCache.downloadMedia(contact, newAvatar, () -> fireEvents(onContactUpdated, contact));
         }
 
-        if (contactHandler != null) {
-            contactHandler.onContactUpdated(contacts);
-        }
+        fireEvents(onContactUpdated, contacts);
     }
 
     protected synchronized void onChatSelected(WeChatContact contact) {
         if (selectedChat == null || !selectedChat.equals(contact)) {
             selectedChat = getContact(contact);
-            if (sessionHandler != null) {
-                sessionHandler.onChatSelected(selectedChat);
-            }
+            fireEvents(onSessionChatSelected, selectedChat);
         }
     }
 
     protected synchronized void onConnect(WeChatContact user) {
         loginUser = getContact(user);
-        if (sessionHandler != null) {
-            sessionHandler.onConnect(loginUser);
-        }
+        fireEvents(onSessionConnect, loginUser);
     }
 
     protected synchronized void onDisconnect() {
-        if (sessionHandler != null) {
-            sessionHandler.onDisconnect();
-        }
+        logoutUser = getContact(loginUser);
+        fireEvents(onSessionDisconnect, logoutUser);
     }
 
     protected synchronized void onQRCodeReceived(String url) {
         mediaCache.downloadMedia("qrCode", true, false, url, () -> {
             if (!connection.isConnected()) {
-                if (sessionHandler != null) {
-                    sessionHandler.onQRCodeReceived(mediaCache.getMedia("qrCode"));
-                }
+                fireEvents(onSessionQRCodeReceived, mediaCache.getMedia("qrCode"));
             }
         });
     }
@@ -216,18 +205,54 @@ public class WeChatSession implements Serializable {
         return mediaCache;
     }
 
-    public WeChatSession setContactHandler(WeChatContactHandler contactHandler) {
-        this.contactHandler = contactHandler;
+    private void fireEvents(EventListener eventHandler, Object... events) {
+        if (eventHandler != null) {
+            if (eventHandler instanceof WeChatSingleEventHandler) {
+                ((WeChatSingleEventHandler) eventHandler).onWeChatEvent(events[0]);
+            } else if (eventHandler instanceof WeChatSingleEventHandler) {
+                ((WeChatSingleEventHandler) eventHandler).onWeChatEvent(events);
+            }
+        }
+    }
+
+    public WeChatSession setOnContactUpdated(WeChatMultiEventHandler<WeChatContact> onContactUpdatedHandler) {
+        this.onContactUpdated = onContactUpdatedHandler;
         return this;
     }
 
-    public WeChatSession setMessageHandler(WeChatMessageHandler messageHandler) {
-        this.messageHandler = messageHandler;
+    public WeChatSession setOnMessageReceived(WeChatMultiEventHandler<WeChatMessage> onMessageReceivedHandler) {
+        this.onMessageReceived = onMessageReceivedHandler;
         return this;
     }
 
-    public WeChatSession setSessionHandler(WeChatSessionHandler sessionHandler) {
-        this.sessionHandler = sessionHandler;
+    public WeChatSession setOnMessageUpdated(WeChatMultiEventHandler<WeChatMessage> onMessageUpdatedHandler) {
+        this.onMessageUpdated = onMessageUpdatedHandler;
         return this;
     }
+
+    public WeChatSession setOnSessionError(WeChatMultiEventHandler<Exception> onSessionErrorHandler) {
+        this.onSessionError = onSessionErrorHandler;
+        return this;
+    }
+
+    public WeChatSession setOnSessionQRCodeReceived(WeChatSingleEventHandler<Image> onSessionQRCodeReceivedHandler) {
+        this.onSessionQRCodeReceived = onSessionQRCodeReceivedHandler;
+        return this;
+    }
+
+    public WeChatSession setOnSessionConnect(WeChatSingleEventHandler<WeChatContact> onSessionConnectHandler) {
+        this.onSessionConnect = onSessionConnectHandler;
+        return this;
+    }
+
+    public WeChatSession setOnSessionDisconnect(WeChatSingleEventHandler<WeChatContact> onSessionDisconnectHandler) {
+        this.onSessionDisconnect = onSessionDisconnectHandler;
+        return this;
+    }
+
+    public WeChatSession setOnSessionChatSelected(WeChatSingleEventHandler<WeChatContact> onSessionChatSelectedHandler) {
+        this.onSessionChatSelected = onSessionChatSelectedHandler;
+        return this;
+    }
+
 }

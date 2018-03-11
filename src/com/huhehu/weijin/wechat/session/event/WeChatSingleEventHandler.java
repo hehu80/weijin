@@ -20,15 +20,16 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
  */
-package com.huhehu.weijin.wechat.session;
+package com.huhehu.weijin.wechat.session.event;
 
-import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import java.util.EventListener;
+import java.util.List;
 
-public interface WeChatContactHandler {
+/**
+ *
+ * @author henning
+ */
+public interface WeChatSingleEventHandler<T> extends EventListener {
 
-    // TODO void onContactAdded(WeChatContact... contacts);
-
-    void onContactUpdated(WeChatContact... contacts);
-
-    // TODO void onContactRemoved(WeChatContact... contacts);
+    public void onWeChatEvent(T event);
 }

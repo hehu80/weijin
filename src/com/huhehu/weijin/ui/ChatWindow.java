@@ -27,7 +27,7 @@ import com.huhehu.weijin.ui.model.MessageListModel;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import com.huhehu.weijin.wechat.session.WeChatSession;
-import com.huhehu.weijin.wechat.session.WeChatSessionHandler;
+import com.huhehu.weijin.wechat.session.event.WeChatSingleEventHandler;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -53,7 +53,7 @@ import javafx.util.Callback;
  *
  * @author henning
  */
-public class ChatWindow extends Application implements WeChatSessionHandler {
+public class ChatWindow extends Application {
 
     private ListView<WeChatContact> contactsView;
     private ListView<WeChatMessage> messageView;
@@ -65,7 +65,6 @@ public class ChatWindow extends Application implements WeChatSessionHandler {
     @Override
     public void start(Stage primaryStage) {
         mainStage = primaryStage;
-        session.setSessionHandler(this);
 
         messageField = new TextField();
         messageField.setOnAction(messageFieldActionHandler);
@@ -97,6 +96,9 @@ public class ChatWindow extends Application implements WeChatSessionHandler {
         qrCodeStage.initModality(Modality.APPLICATION_MODAL);
         qrCodeStage.setTitle("Please scan QR-Code to login");
 
+        session.setOnSessionQRCodeReceived(onQRCodeReceivedHandler);
+        session.setOnSessionConnect(onSesssionConnectHandler);
+        session.setOnSessionChatSelected(onSessionChatSelectedHandler);
         session.connect();
     }
 
@@ -104,12 +106,7 @@ public class ChatWindow extends Application implements WeChatSessionHandler {
         launch(args);
     }
 
-    @Override
-    public void onError(Exception e) {
-    }
-
-    @Override
-    public void onQRCodeReceived(Image qrCode) {
+    private final WeChatSingleEventHandler<Image> onQRCodeReceivedHandler = (qrCode) -> {
         Platform.runLater(() -> {
             VBox rootPane = new VBox(new ImageView(qrCode));
             rootPane.setAlignment(Pos.CENTER);
@@ -118,28 +115,22 @@ public class ChatWindow extends Application implements WeChatSessionHandler {
             qrCodeStage.setScene(new Scene(rootPane));
             qrCodeStage.show();
         });
-    }
+    };
 
-    @Override
-    public void onConnect(WeChatContact user) {
+    private final WeChatSingleEventHandler<WeChatContact> onSesssionConnectHandler = (user) -> {
         Platform.runLater(() -> {
             qrCodeStage.hide();
         });
-    }
+    };
 
-    @Override
-    public void onDisconnect() {
-    }
-
-    @Override
-    public void onChatSelected(WeChatContact contact) {
+    private final WeChatSingleEventHandler<WeChatContact> onSessionChatSelectedHandler = (user) -> {
         Platform.runLater(() -> {
-            if (contact != contactsView.getSelectionModel().getSelectedItem()) {
-                contactsView.getSelectionModel().select(contact);
-                contactsView.scrollTo(contact);
+            if (user != contactsView.getSelectionModel().getSelectedItem()) {
+                contactsView.getSelectionModel().select(user);
+                contactsView.scrollTo(user);
             }
         });
-    }
+    };
 
     private final EventHandler<WindowEvent> stageCloseHandler = (event) -> {
         qrCodeStage.hide();
