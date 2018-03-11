@@ -23,8 +23,7 @@
 package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
-
-import java.awt.*;
+import javafx.scene.image.Image;
 
 public interface WeChatSessionHandler {
 

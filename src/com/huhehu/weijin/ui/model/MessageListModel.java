@@ -26,69 +26,50 @@ import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import com.huhehu.weijin.wechat.session.WeChatMessageHandler;
 import com.huhehu.weijin.wechat.session.WeChatSession;
+import javafx.application.Platform;
+import javafx.collections.ObservableListBase;
 
-import javax.swing.*;
-import java.util.ArrayList;
-import java.util.List;
-
-public class MessageListModel extends AbstractListModel<WeChatMessage> implements WeChatMessageHandler {
+/**
+ *
+ * @author henning
+ */
+public class MessageListModel extends ObservableListModel<WeChatMessage> implements WeChatMessageHandler {
 
     private WeChatSession session;
     private WeChatContact contact;
-    private List<WeChatMessage> messages;
 
     public MessageListModel(WeChatSession session) {
+        super(session.getMessages(session.getSelectedChat()));
         this.session = session;
         this.contact = session.getSelectedChat();
         this.session.setMessageHandler(this);
-        this.messages = new ArrayList<>(session.getMessages(contact));
-    }
-
-    public WeChatSession getSession() {
-        return session;
-    }
-
-    @Override
-    public int getSize() {
-        return messages.size();
-    }
-
-    @Override
-    public WeChatMessage getElementAt(int index) {
-        return messages.get(index);
     }
 
     @Override
     public void onMessageReceived(WeChatMessage... messages) {
-        SwingUtilities.invokeLater(() -> {
-            int count = 0;
-            int size = 0;
-
+        Platform.runLater(() -> {
+            beginChange();
             if (contact != null) {
                 for (WeChatMessage message : messages) {
                     if (contact.equals(message.getToUserName()) || contact.equals(message.getFromUserName())) {
-                        this.messages.add(message);
-                        count++;
+                        add(message);
                     }
                 }
             }
-
-            if (count > 0) {
-                size = this.messages.size();
-                fireIntervalAdded(this.messages, size - count, size);
-            }
+            endChange();
         });
     }
 
     @Override
     public void onMessageUpdated(WeChatMessage... messages) {
-        SwingUtilities.invokeLater(() -> {
+        Platform.runLater(() -> {
             for (WeChatMessage message : messages) {
-                int index = this.messages.indexOf(message);
+                int index = indexOf(message);
 
                 if (index >= 0) {
-                    this.messages.set(index, message);
-                    fireContentsChanged(message, index, index);
+                    beginChange();
+                    set(index, message);
+                    endChange();
                 }
             }
         });

@@ -24,86 +24,107 @@ package com.huhehu.weijin.ui;
 
 import com.huhehu.weijin.ui.model.ContactListModel;
 import com.huhehu.weijin.ui.model.MessageListModel;
-import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import com.huhehu.weijin.wechat.session.WeChatSession;
 import com.huhehu.weijin.wechat.session.WeChatSessionHandler;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
+import javafx.util.Callback;
 
-import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+/**
+ *
+ * @author henning
+ */
+public class ChatWindow extends Application implements WeChatSessionHandler {
 
-public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSelectionListener, ActionListener, WindowListener {
+    private ListView<WeChatContact> contactsView;
+    private ListView<WeChatMessage> messageView;
+    private TextField messageField;
+    private WeChatSession session = new WeChatSession();
+    private Stage qrCodeStage;
+    private Stage mainStage;
 
-    private ContactList contactList;
-    private MessageList messageList;
-    private JTextField messageField;
-    private JFrame qrCodeFrame;
-    private JLabel qrCodeLabel;
-    private WeChatSession session;
-
-    public ChatWindow() throws WeChatException {
-        session = new WeChatSession();
-
-        BorderLayout layout = new BorderLayout();
-        setLayout(layout);
-        setTitle("WeiJin");
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-        addWindowListener(this);
-
-        contactList = new ContactList(new ContactListModel(session));
-        contactList.addListSelectionListener(this);
-        getContentPane().add(new JScrollPane(contactList), BorderLayout.LINE_START);
-
-        messageList = new MessageList(new MessageListModel(session));
-        getContentPane().add(new JScrollPane(messageList), BorderLayout.CENTER);
-
-        messageField = new JTextField();
-        messageField.addActionListener(this);
-        getContentPane().add(messageField, BorderLayout.PAGE_END);
-
-        qrCodeFrame = new JFrame();
-        qrCodeLabel = new JLabel();
-        qrCodeFrame.getContentPane().add(qrCodeLabel);
-        qrCodeFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        qrCodeFrame.setTitle("Scan QR-Code to login");
-
+    @Override
+    public void start(Stage primaryStage) {
+        mainStage = primaryStage;
         session.setSessionHandler(this);
-        session.connect(); // TODO not in constructor
+
+        messageField = new TextField();
+        messageField.setOnAction(messageFieldActionHandler);
+
+        messageView = new ListView(new MessageListModel(session));
+        messageView.setCellFactory(messageCellFactory);
+        messageView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+        contactsView = new ListView(new ContactListModel(session));
+        contactsView.setCellFactory(contactCellFactory);
+        contactsView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+        contactsView.getSelectionModel().selectedItemProperty().addListener(contactListSelectionHandler);
+
+        BorderPane chatPane = new BorderPane();
+        chatPane.setCenter(messageView);
+        chatPane.setBottom(messageField);
+
+        BorderPane rootPane = new BorderPane();
+        rootPane.setLeft(contactsView);
+        rootPane.setCenter(chatPane);
+
+        mainStage.setOnCloseRequest(stageCloseHandler);
+        mainStage.setTitle("WeiJin");
+        mainStage.setScene(new Scene(rootPane, 800, 500));
+        mainStage.show();
+
+        qrCodeStage = new Stage();
+        qrCodeStage.setOnCloseRequest(stageCloseHandler);
+        qrCodeStage.initModality(Modality.APPLICATION_MODAL);
+        qrCodeStage.setTitle("Please scan QR-Code to login");
+
+        session.connect();
     }
 
-    public static void main(String[] args) throws WeChatException {
-        ChatWindow chatWindow = new ChatWindow();
-        chatWindow.setSize(800, 500);
-        chatWindow.setVisible(true);
+    public static void main(String[] args) {
+        launch(args);
     }
 
     @Override
     public void onError(Exception e) {
-
     }
 
     @Override
     public void onQRCodeReceived(Image qrCode) {
-        qrCodeLabel.setIcon(new ImageIcon(qrCode));
-        qrCodeFrame.setSize(qrCodeLabel.getMinimumSize().width, qrCodeLabel.getMinimumSize().height);
-        qrCodeFrame.setVisible(true);
+        Platform.runLater(() -> {
+            VBox rootPane = new VBox(new ImageView(qrCode));
+            rootPane.setAlignment(Pos.CENTER);
+            rootPane.setPadding(new Insets(0));
+
+            qrCodeStage.setScene(new Scene(rootPane));
+            qrCodeStage.show();
+        });
     }
 
     @Override
     public void onConnect(WeChatContact user) {
-        qrCodeFrame.setVisible(false);
+        Platform.runLater(() -> {
+            qrCodeStage.hide();
+        });
     }
 
     @Override
@@ -112,22 +133,23 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
 
     @Override
     public void onChatSelected(WeChatContact contact) {
-        SwingUtilities.invokeLater(() -> contactList.setSelectedValue(contact, true));
+        Platform.runLater(() -> {
+            if (contact != contactsView.getSelectionModel().getSelectedItem()) {
+                contactsView.getSelectionModel().select(contact);
+                contactsView.scrollTo(contact);
+            }
+        });
     }
 
-    @Override
-    public void valueChanged(ListSelectionEvent event) {
-        try {
-            session.selectChat(contactList.getSelectedValue());
-            messageList.setModel(new MessageListModel(session));
-        } catch (WeChatException ignore) {
-        }
-    }
+    private final EventHandler<WindowEvent> stageCloseHandler = (event) -> {
+        qrCodeStage.hide();
+        mainStage.hide();
+        session.disconnect();
+    };
 
-    @Override
-    public void actionPerformed(ActionEvent actionEvent) {
+    private final EventHandler<ActionEvent> messageFieldActionHandler = (event) -> {
         WeChatMessage message = new WeChatMessage();
-        message.setToUserName(contactList.getSelectedValue());
+        message.setToUserName(contactsView.getSelectionModel().getSelectedItem());
         message.setFromUserName(session.getLoginUser());
         message.setContent(messageField.getText());
 
@@ -136,38 +158,46 @@ public class ChatWindow extends JFrame implements WeChatSessionHandler, ListSele
             messageField.setText("");
         } catch (Exception ignore) {
         }
-    }
+    };
 
-    @Override
-    public void windowOpened(WindowEvent windowEvent) {
-    }
+    private final ChangeListener<WeChatContact> contactListSelectionHandler = (observable, oldSelection, newSelection) -> {
+        session.selectChat(newSelection);
+        messageView.setItems(new MessageListModel(session));
+    };
 
-    @Override
-    public void windowClosing(WindowEvent windowEvent) {
-        try {
-            session.disconnect();
-        } catch (Exception ignore) {
-        }
-        qrCodeFrame.dispose();
-    }
+    private final Callback<ListView<WeChatContact>, ListCell<WeChatContact>> contactCellFactory = (list) -> {
+        return new ListCell<WeChatContact>() {
+            @Override
+            public void updateItem(WeChatContact contact, boolean empty) {
+                super.updateItem(contact, empty);
+                if (contact != null) {
+                    setText(contact.getNickName());
+                    Image avatar = session.getMediaCache().getMedia(contact);
+                    if (avatar != null) {
+                        ImageView avatarView = new ImageView(avatar);
+                        avatarView.setFitHeight(30.0d);
+                        avatarView.setFitWidth(30.0d);
+                        setGraphic(avatarView);
+                    }
+                }
+            }
+        };
+    };
 
-    @Override
-    public void windowClosed(WindowEvent windowEvent) {
-    }
-
-    @Override
-    public void windowIconified(WindowEvent windowEvent) {
-    }
-
-    @Override
-    public void windowDeiconified(WindowEvent windowEvent) {
-    }
-
-    @Override
-    public void windowActivated(WindowEvent windowEvent) {
-    }
-
-    @Override
-    public void windowDeactivated(WindowEvent windowEvent) {
-    }
+    private final Callback<ListView<WeChatMessage>, ListCell<WeChatMessage>> messageCellFactory = (list) -> {
+        return new ListCell<WeChatMessage>() {
+            @Override
+            public void updateItem(WeChatMessage message, boolean empty) {
+                super.updateItem(message, empty);
+                if (message != null) {
+                    setText(message.getContent());
+                    Image media = session.getMediaCache().getMedia(message);
+                    if (media != null) {
+                        ImageView mediaView = new ImageView(media);
+                        setGraphic(mediaView);
+                    }
+                }
+            }
+        };
+    };
 }

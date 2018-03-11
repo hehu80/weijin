@@ -22,43 +22,49 @@
  */
 package com.huhehu.weijin.ui.model;
 
-import com.huhehu.weijin.wechat.contacts.WeChatContact;
-import com.huhehu.weijin.wechat.session.WeChatContactHandler;
-import com.huhehu.weijin.wechat.session.WeChatSession;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.application.Platform;
 import javafx.collections.ModifiableObservableListBase;
-import javafx.collections.ObservableListBase;
 
 /**
  *
  * @author henning
  */
-public class ContactListModel extends ObservableListModel<WeChatContact> implements WeChatContactHandler {
+public class ObservableListModel<E> extends ModifiableObservableListBase<E> {
 
-    private WeChatSession session; 
+    private List<E> elements;
 
-    public ContactListModel(WeChatSession session) {
-        super(session.getContacts());
-        this.session = session;
-        this.session.setContactHandler(this);
+    public ObservableListModel(List<? extends E> elements) {
+        this.elements = new ArrayList<E>(elements);
+    }
+
+    public ObservableListModel() {
+        this.elements = new ArrayList<E>();
     }
 
     @Override
-    public void onContactUpdated(WeChatContact... contacts) {
-        Platform.runLater(() -> {
-            beginChange();
-            for (WeChatContact contact : contacts) {
-                int index = indexOf(contact);
-                if (index >= 0) {
-                    set(index, contact);
-                } else {
-                    add(contact);
-                }
-            }
-            endChange();
-        });
+    public E get(int index) {
+        return elements.get(index);
+    }
+
+    @Override
+    public int size() {
+        return elements.size();
+    }
+
+    @Override
+    protected void doAdd(int index, E element) {
+        elements.add(index, element);
+    }
+
+    @Override
+    protected E doSet(int index, E element) {
+        return elements.set(index, element);
+    }
+
+    @Override
+    protected E doRemove(int index) {
+        return elements.remove(index);
     }
 
 }

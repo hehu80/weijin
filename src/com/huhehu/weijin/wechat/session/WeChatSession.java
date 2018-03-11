@@ -48,27 +48,25 @@ public class WeChatSession implements Serializable {
         return connection != null && connection.isConnected();
     }
 
-    public void connect() throws WeChatException {
-        if (connection != null) {
-            throw new WeChatException("please disconnect first before open a new connection");
+    public void connect() {
+        if (connection == null) {
+            connection = new WeChatConnection(this);
+
+            mediaCache = new WeChatMediaCache(this);
+            mediaCache.loadAll();
         }
-
-        connection = new WeChatConnection(this);
-
-        mediaCache = new WeChatMediaCache(this);
-        mediaCache.loadAll();
     }
 
-    public void disconnect() throws WeChatException {
-        if (connection == null) {
-            throw new WeChatException("not connected");
+    public void disconnect() {
+        if (connection != null) {
+            connection.shutdownNow();
+            connection = null;
         }
 
-        connection.shutdownNow();
-        connection = null;
-
-        mediaCache.shutdownNow();
-        mediaCache = null;
+        if (mediaCache != null) {
+            mediaCache.shutdownNow();
+            mediaCache = null;
+        }
     }
 
     public synchronized void sendMessage(WeChatMessage message) throws WeChatException {
@@ -79,7 +77,7 @@ public class WeChatSession implements Serializable {
         connection.sendMessage(message);
     }
 
-    public synchronized void selectChat(WeChatContact contact) throws WeChatException {
+    public synchronized void selectChat(WeChatContact contact) {
         if (selectedChat == null || !selectedChat.equals(contact)) {
             onChatSelected(contact);
         }

@@ -1,14 +1,31 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/* MIT License
+
+   Copyright (c) 2018, Henning Voss <henning@huhehu.com>
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
  */
 package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_FILE;
-import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,6 +43,9 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
+import javafx.scene.image.WritableImage;
 import javax.imageio.ImageIO;
 
 /**
@@ -59,7 +79,9 @@ public class WeChatMediaCache {
                 Files.list(Paths.get(MEDIA_DIRECTORY)).forEach((file) -> {
                     if (Files.isRegularFile(file) && Files.isReadable(file)) {
                         try {
-                            Image image = ImageIO.read(file.toFile());
+                            BufferedImage bufferedImaged = ImageIO.read(file.toFile());
+                            WritableImage image = new WritableImage(bufferedImaged.getWidth(), bufferedImaged.getHeight());
+                            SwingFXUtils.toFXImage(bufferedImaged, image);
                             synchronized (images) {
                                 images.put(file.getFileName().toString(), image);
                             }
@@ -98,7 +120,9 @@ public class WeChatMediaCache {
 
                 if (useCache && !fromCache && Files.exists(mediaFile)) {
                     try {
-                        Image image = ImageIO.read(mediaFile.toFile());
+                        BufferedImage bufferedImaged = ImageIO.read(mediaFile.toFile());
+                        WritableImage image = new WritableImage(bufferedImaged.getWidth(), bufferedImaged.getHeight());
+                        SwingFXUtils.toFXImage(bufferedImaged, image);
                         synchronized (images) {
                             images.put(mediaId, image);
                         }
@@ -119,7 +143,9 @@ public class WeChatMediaCache {
                     }
 
                     try {
-                        Image image = ImageIO.read(mediaFile.toFile());
+                        BufferedImage bufferedImaged = ImageIO.read(mediaFile.toFile());
+                        WritableImage image = new WritableImage(bufferedImaged.getWidth(), bufferedImaged.getHeight());
+                        SwingFXUtils.toFXImage(bufferedImaged, image);
                         synchronized (images) {
                             images.put(mediaId, image);
                         }
