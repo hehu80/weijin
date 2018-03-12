@@ -63,8 +63,8 @@ public class ChatWindow extends Application {
     private WeChatSession session = new WeChatSession();
     private Stage qrCodeStage;
     private Stage mainStage;
-    private static final Image ICON_WECHAT = new Image("file:wechat.png"); // TODO resource
-    private static final Image ICON_AVATAR = new Image("file:avatar.png"); // TODO resource
+    public static final Image ICON_WECHAT = new Image("file:wechat.png"); // TODO resource
+    public static final Image ICON_AVATAR = new Image("file:avatar.png"); // TODO resource
 
     public static void main(String[] args) {
         launch(args);
