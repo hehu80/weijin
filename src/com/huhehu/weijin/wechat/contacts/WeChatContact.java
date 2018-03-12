@@ -50,11 +50,10 @@ public class WeChatContact extends WeChatObject implements Serializable {
 
     public static WeChatContact fromJson(JSONObject json) {
         WeChatContact contact;
-        if (json.has("MemberCount")) {
+        if (json.getString("HeadImgUrl").contains("webwxgetheadimg")) {
             WeChatGroup group = new WeChatGroup();
             group.setMemberCount(json.getInt("MemberCount"));
             group.setOwnerUin(json.getInt("OwnerUin"));
-
             contact = group;
         } else {
             WeChatUser user = new WeChatUser();

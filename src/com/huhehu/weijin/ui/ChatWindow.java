@@ -97,6 +97,11 @@ public class ChatWindow extends Application {
         contactsView.setCellFactory(contactCellFactory);
         contactsView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         contactsView.getSelectionModel().selectedItemProperty().addListener(contactListSelectionHandler);
+        
+        if(session.getSelectedChat() != null){
+            contactsView.getSelectionModel().select(session.getSelectedChat());
+            contactsView.scrollTo(session.getSelectedChat());
+        }
 
         BorderPane chatPane = new BorderPane();
         chatPane.setCenter(messageView);
