@@ -81,7 +81,7 @@ public final class WeChatUtil {
                     return getValueFromJavaScript(javaScript.substring(firstValueEnd + 1).trim(), key);
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception ignore) {
             return null;
         }
     }

@@ -36,6 +36,7 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
@@ -44,6 +45,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -61,6 +63,12 @@ public class ChatWindow extends Application {
     private WeChatSession session = new WeChatSession();
     private Stage qrCodeStage;
     private Stage mainStage;
+    private static final Image ICON_WECHAT = new Image("file:wechat.png"); // TODO resource
+    private static final Image ICON_AVATAR = new Image("file:avatar.png"); // TODO resource
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -88,6 +96,7 @@ public class ChatWindow extends Application {
 
         mainStage.setOnCloseRequest(stageCloseHandler);
         mainStage.setTitle("WeiJin");
+        mainStage.getIcons().add(ICON_WECHAT);
         mainStage.setScene(new Scene(rootPane, 800, 500));
         mainStage.show();
 
@@ -95,15 +104,12 @@ public class ChatWindow extends Application {
         qrCodeStage.setOnCloseRequest(stageCloseHandler);
         qrCodeStage.initModality(Modality.APPLICATION_MODAL);
         qrCodeStage.setTitle("Please scan QR-Code to login");
+        qrCodeStage.getIcons().add(ICON_WECHAT);
 
         session.setOnSessionQRCodeReceived(onQRCodeReceivedHandler);
         session.setOnSessionConnect(onSesssionConnectHandler);
         session.setOnSessionChatSelected(onSessionChatSelectedHandler);
         session.connect();
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 
     private final WeChatSingleEventHandler<Image> onQRCodeReceivedHandler = (qrCode) -> {
@@ -164,12 +170,13 @@ public class ChatWindow extends Application {
                 if (contact != null) {
                     setText(contact.getNickName());
                     Image avatar = session.getMediaCache().getMedia(contact);
-                    if (avatar != null) {
-                        ImageView avatarView = new ImageView(avatar);
-                        avatarView.setFitHeight(30.0d);
-                        avatarView.setFitWidth(30.0d);
-                        setGraphic(avatarView);
+                    if (avatar == null) {
+                        avatar = ICON_AVATAR;
                     }
+                    ImageView avatarView = new ImageView(avatar);
+                    avatarView.setFitHeight(30.0d);
+                    avatarView.setFitWidth(30.0d);
+                    setGraphic(avatarView);
                 }
             }
         };
@@ -177,16 +184,53 @@ public class ChatWindow extends Application {
 
     private final Callback<ListView<WeChatMessage>, ListCell<WeChatMessage>> messageCellFactory = (list) -> {
         return new ListCell<WeChatMessage>() {
+            private BorderPane pane;
+            private BorderPane contentPane;
+            private Label contentLabel;
+            private ImageView contentMedia;
+
             @Override
             public void updateItem(WeChatMessage message, boolean empty) {
                 super.updateItem(message, empty);
-                if (message != null) {
-                    setText(message.getContent());
+
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    if (pane == null) {
+                        contentLabel = new Label();
+                        contentLabel.setStyle("-fx-text-fill:white;");
+
+                        contentMedia = new ImageView();
+
+                        contentPane = new BorderPane();
+                        contentPane.setCenter(contentLabel);
+                        contentPane.setPadding(new Insets(10.0d));
+                        contentPane.setStyle("-fx-background-color:green;");
+
+                        pane = new BorderPane();
+                    }
+
+                    if (message.isReceived()) {
+                        contentLabel.setTextAlignment(TextAlignment.LEFT);
+                        pane.setRight(null);
+                        pane.setLeft(contentPane);
+                    } else {
+                        contentLabel.setTextAlignment(TextAlignment.RIGHT);
+                        pane.setLeft(null);
+                        pane.setRight(contentPane);
+                    }
+
                     Image media = session.getMediaCache().getMedia(message);
                     if (media != null) {
-                        ImageView mediaView = new ImageView(media);
-                        setGraphic(mediaView);
+                        contentMedia.setImage(media);
+                        contentPane.setLeft(null);
+                        contentPane.setLeft(contentMedia);
+                    } else {
+                        contentPane.setLeft(null);
                     }
+
+                    contentLabel.setText(message.getContent());
+                    setGraphic(pane);
                 }
             }
         };

@@ -40,6 +40,7 @@ public class WeChatMessage extends WeChatObject implements Serializable {
     private String content;
     private String fromUserName;
     private String toUserName;
+    private boolean received;
     private int msgType;
 
     public static WeChatMessage fromJson(JSONObject json) {
@@ -104,6 +105,15 @@ public class WeChatMessage extends WeChatObject implements Serializable {
 
     public WeChatMessage setMsgType(int msgType) {
         this.msgType = msgType;
+        return this;
+    }
+
+    public boolean isReceived() {
+        return received;
+    }
+
+    public WeChatMessage setReceived(boolean received) {
+        this.received = received;
         return this;
     }
 

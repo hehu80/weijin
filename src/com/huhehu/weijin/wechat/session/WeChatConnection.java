@@ -67,7 +67,7 @@ public final class WeChatConnection {
     }
 
     private int readTimeout = 0;
-    private int connectTimeout = 2000;
+    private int connectTimeout = 0;
     private String wxskey;
     private String wxsid;
     private String wxuin;
@@ -222,13 +222,10 @@ public final class WeChatConnection {
 
         sendJSONRequest(connection, "SyncKey", json);
 
-        json = parseJSONResponse(connection);
+        json = parseJSONResponse(connection);        
 
         List<WeChatMessage> messages = new ArrayList<>();
         if (json.has("AddMsgList")) {
-            if (json.getJSONArray("AddMsgList").length() > 0) {
-                System.out.println(json.toString());
-            }
             for (int i = 0; i < json.getJSONArray("AddMsgList").length(); i++) {
                 WeChatMessage message = WeChatMessage.fromJson(json.getJSONArray("AddMsgList").getJSONObject(i));
                 if (message.getMsgType() == TYPE_CHAT_CHANGE) {

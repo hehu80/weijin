@@ -127,7 +127,6 @@ public class WeChatMediaCache {
 
                 if (refresh || !fromCache) {
                     try (InputStream inputStream = session.getConnection().openConnection(url).getInputStream()) {
-                        System.out.println("DOWNLOAD " + mediaId);
                         if (!Files.exists(Paths.get(MEDIA_DIRECTORY))) {
                             Files.createDirectory(Paths.get(MEDIA_DIRECTORY));
                         }
@@ -135,7 +134,7 @@ public class WeChatMediaCache {
                     } catch (IOException ignore) {
                     }
 
-                    try {
+                    try {                        
                         BufferedImage bufferedImaged = ImageIO.read(mediaFile.toFile());
                         WritableImage image = new WritableImage(bufferedImaged.getWidth(), bufferedImaged.getHeight());
                         SwingFXUtils.toFXImage(bufferedImaged, image);

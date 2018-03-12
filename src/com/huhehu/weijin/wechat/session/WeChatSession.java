@@ -99,7 +99,13 @@ public class WeChatSession implements Serializable {
 
     protected synchronized void onMessageReceived(WeChatMessage... messages) {
         for (WeChatMessage message : messages) {
-            WeChatContact contact = new WeChatContact(loginUser.equals(message.getToUserName()) ? message.getFromUserName() : message.getToUserName());
+            if (loginUser.equals(message.getToUserName())) {
+                message.setReceived(true);
+            } else {
+                message.setReceived(false);
+            }
+
+            WeChatContact contact = new WeChatContact(message.isReceived() ? message.getFromUserName() : message.getToUserName());
 
             if (!chats.containsKey(contact)) {
                 chats.put(contact, new ArrayList<>());
@@ -196,7 +202,7 @@ public class WeChatSession implements Serializable {
             return new ArrayList<>();
         }
     }
-
+    
     public WeChatConnection getConnection() {
         return connection;
     }
@@ -209,8 +215,8 @@ public class WeChatSession implements Serializable {
         if (eventHandler != null) {
             if (eventHandler instanceof WeChatSingleEventHandler) {
                 ((WeChatSingleEventHandler) eventHandler).onWeChatEvent(events[0]);
-            } else if (eventHandler instanceof WeChatSingleEventHandler) {
-                ((WeChatSingleEventHandler) eventHandler).onWeChatEvent(events);
+            } else if (eventHandler instanceof WeChatMultiEventHandler) {
+                ((WeChatMultiEventHandler) eventHandler).onWeChatEvent(events);
             }
         }
     }
