@@ -39,6 +39,7 @@ public class WeChatContact extends WeChatObject implements Serializable {
     private int verifyFlag;
     private String pinYinInitial;
     private String pinYinQuanPin;
+    private String seq;
 
     public WeChatContact() {
     }
@@ -106,6 +107,13 @@ public class WeChatContact extends WeChatObject implements Serializable {
 
     public WeChatContact setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+        if (imageUrl != null) {
+            int seqStart = imageUrl.indexOf("seq=") + 4;
+            int seqEnd = imageUrl.indexOf("&", seqStart);
+            setSeq(imageUrl.substring(seqStart, seqEnd));
+        } else {
+            setSeq(null);
+        }
         return this;
     }
 
@@ -163,8 +171,31 @@ public class WeChatContact extends WeChatObject implements Serializable {
         return this;
     }
 
+    public String getSeq() {
+        return seq == null ? userName : seq;
+    }
+
+    public WeChatContact setSeq(String seq) {
+        this.seq = seq;
+        return this;
+    }
+
     @Override
     public String getWeChatId() {
         return userName;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!super.equals(o)) {
+            if (o != null && (o instanceof WeChatContact) && uin != 0) {
+                return uin == ((WeChatContact) o).uin;
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
+    }
+
 }

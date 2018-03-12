@@ -24,7 +24,6 @@ package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.WeChatNotConnectedException;
-import com.huhehu.weijin.wechat.WeChatObject;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import org.json.JSONArray;
@@ -32,7 +31,6 @@ import org.json.JSONObject;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -44,10 +42,7 @@ import java.util.concurrent.Executors;
 
 import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
 import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
-import java.util.concurrent.ThreadFactory;
 import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
-import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_FILE;
-import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_IMAGE;
 
 public final class WeChatConnection {
 
@@ -250,7 +245,7 @@ public final class WeChatConnection {
             contacts.add(WeChatContact.fromJson((JSONObject) member));
         }
 
-        eventHandler.submit(() -> session.onContactUpdated(contacts.toArray(new WeChatContact[contacts.size()])));
+        eventHandler.submit(() -> session.onContactReceived(contacts.toArray(new WeChatContact[contacts.size()])));
     }
 
     private boolean retrieveUserId() throws IOException {

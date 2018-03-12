@@ -24,10 +24,15 @@ package com.huhehu.weijin.ui;
 
 import com.huhehu.weijin.ui.model.ContactListModel;
 import com.huhehu.weijin.ui.model.MessageListModel;
+import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import com.huhehu.weijin.wechat.session.WeChatSession;
+import static com.huhehu.weijin.wechat.session.WeChatSession.loadSession;
+import static com.huhehu.weijin.wechat.session.WeChatSession.saveSession;
 import com.huhehu.weijin.wechat.session.event.WeChatSingleEventHandler;
+import java.io.IOException;
+import java.nio.file.Paths;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -60,11 +65,12 @@ public class ChatWindow extends Application {
     private ListView<WeChatContact> contactsView;
     private ListView<WeChatMessage> messageView;
     private TextField messageField;
-    private WeChatSession session = new WeChatSession();
+    private WeChatSession session;
     private Stage qrCodeStage;
     private Stage mainStage;
     public static final Image ICON_WECHAT = new Image("file:wechat.png"); // TODO resource
     public static final Image ICON_AVATAR = new Image("file:avatar.png"); // TODO resource
+    public static final String SESSION_FILE = "session";
 
     public static void main(String[] args) {
         launch(args);
@@ -72,6 +78,12 @@ public class ChatWindow extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        try {
+            session = loadSession(Paths.get(SESSION_FILE));
+        } catch (IOException | ClassNotFoundException ignore) {
+            session = new WeChatSession();
+        }
+
         mainStage = primaryStage;
 
         messageField = new TextField();
@@ -142,6 +154,11 @@ public class ChatWindow extends Application {
         qrCodeStage.hide();
         mainStage.hide();
         session.disconnect();
+        
+        try {
+            saveSession(session, Paths.get(SESSION_FILE));
+        } catch (IOException ignore) {
+        }
     };
 
     private final EventHandler<ActionEvent> messageFieldActionHandler = (event) -> {
@@ -153,7 +170,7 @@ public class ChatWindow extends Application {
         try {
             session.sendMessage(message);
             messageField.setText("");
-        } catch (Exception ignore) {
+        } catch (WeChatException ignore) {
         }
     };
 
@@ -169,7 +186,7 @@ public class ChatWindow extends Application {
                 super.updateItem(contact, empty);
                 if (contact != null) {
                     setText(contact.getNickName());
-                    Image avatar = session.getMediaCache().getMedia(contact);
+                    Image avatar = session.getMedia(contact);
                     if (avatar == null) {
                         avatar = ICON_AVATAR;
                     }
@@ -220,7 +237,7 @@ public class ChatWindow extends Application {
                         pane.setRight(contentPane);
                     }
 
-                    Image media = session.getMediaCache().getMedia(message);
+                    Image media = session.getMedia(message);
                     if (media != null) {
                         contentMedia.setImage(media);
                         contentPane.setLeft(null);

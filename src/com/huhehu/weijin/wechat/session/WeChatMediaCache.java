@@ -52,17 +52,35 @@ public class WeChatMediaCache {
     private static final String MEDIA_DIRECTORY = "media";
 
     private WeChatSession session;
-    private Map<String, Image> images = new HashMap<>();
-    private ExecutorService mediaDownloader;
+    private transient Map<String, Image> images = new HashMap<>();
+    private transient ExecutorService mediaDownloader;
 
     protected WeChatMediaCache(WeChatSession session) {
         this.session = session;
 
         mediaDownloader = Executors.newFixedThreadPool(16, new WeChatSessionThreadFactory("WeChat-Media"));
+        loadAll();
     }
 
     public WeChatMediaCache clearAll() {
+        return clearAll(false);
+    }
+
+    public WeChatMediaCache clearAll(boolean hard) {
         images.clear();
+
+        if (hard) {
+            shutdownNow();
+            try {
+                Files.list(Paths.get(MEDIA_DIRECTORY)).forEach((file) -> {
+                    try {
+                        Files.deleteIfExists(file);
+                    } catch (IOException ignore) {
+                    }
+                });
+            } catch (IOException ignore) {
+            }
+        }
         return this;
     }
 
@@ -91,6 +109,7 @@ public class WeChatMediaCache {
 
     protected void shutdownNow() {
         mediaDownloader.shutdownNow();
+        mediaDownloader = Executors.newFixedThreadPool(16, new WeChatSessionThreadFactory("WeChat-Media"));
     }
 
     public WeChatMediaCache downloadMedia(WeChatContact contact, boolean refresh, Runnable onDownloaded) {
@@ -134,7 +153,7 @@ public class WeChatMediaCache {
                     } catch (IOException ignore) {
                     }
 
-                    try {                        
+                    try {
                         BufferedImage bufferedImaged = ImageIO.read(mediaFile.toFile());
                         WritableImage image = new WritableImage(bufferedImaged.getWidth(), bufferedImaged.getHeight());
                         SwingFXUtils.toFXImage(bufferedImaged, image);
@@ -156,10 +175,7 @@ public class WeChatMediaCache {
     }
 
     protected String getContactAvatarMediaId(WeChatContact contact) {
-        String mediaId = contact.getImageUrl();
-        int seqStart = mediaId.indexOf("seq=") + 4;
-        int seqEnd = mediaId.indexOf("&", seqStart);
-        return "avatar_" + mediaId.substring(seqStart, seqEnd);
+        return "avatar_" + contact.getSeq();
     }
 
     protected String getMessageMediaId(WeChatMessage message) {
