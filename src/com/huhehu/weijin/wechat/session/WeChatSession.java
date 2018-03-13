@@ -35,6 +35,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,6 +45,10 @@ import java.util.List;
 import java.util.Map;
 import javafx.scene.image.Image;
 
+/**
+ *
+ * @author Henning <henning@huhehu.com>
+ */
 public class WeChatSession implements Serializable {
 
     private transient WeChatConnection connection;
@@ -64,7 +69,7 @@ public class WeChatSession implements Serializable {
 
     private void readObject(ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
         inputStream.defaultReadObject();
-        
+
         mediaCache = new WeChatMediaCache(this);
         mediaCache.loadAll(); // just start loading all files directly again
     }
@@ -82,10 +87,10 @@ public class WeChatSession implements Serializable {
     public void disconnect() {
         if (connection != null) {
             connection.shutdownNow();
-            connection = null;            
+            connection = null;
         }
 
-        mediaCache.shutdownNow();        
+        mediaCache.shutdownNow();
     }
 
     public synchronized void sendMessage(WeChatMessage message) throws WeChatException {
@@ -93,6 +98,7 @@ public class WeChatSession implements Serializable {
             throw new WeChatException("please connect first before send a new message");
         }
 
+        message.setTime(Instant.now());
         connection.sendMessage(message);
     }
 
@@ -216,7 +222,7 @@ public class WeChatSession implements Serializable {
 
     protected synchronized void onConnect(WeChatContact user) {
         loginUser = getContact(user);
-        if(!loginUser.equals(logoutUser)){
+        if (!loginUser.equals(logoutUser)) {
             mediaCache.clearAll(true); // reset cache if user changed
         }
 

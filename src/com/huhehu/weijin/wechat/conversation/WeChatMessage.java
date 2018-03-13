@@ -23,10 +23,16 @@
 package com.huhehu.weijin.wechat.conversation;
 
 import com.huhehu.weijin.wechat.WeChatObject;
+import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
 import java.io.Serializable;
+import java.time.Instant;
 import org.json.JSONObject;
 
+/**
+ *
+ * @author Henning <henning@huhehu.com>
+ */
 public class WeChatMessage extends WeChatObject implements Serializable {
 
     public static int TYPE_TEXT = 1;
@@ -42,6 +48,7 @@ public class WeChatMessage extends WeChatObject implements Serializable {
     private String toUserName;
     private boolean received;
     private int msgType;
+    private Instant time;
 
     public static WeChatMessage fromJson(JSONObject json) {
         WeChatMessage message = new WeChatMessage();
@@ -50,6 +57,7 @@ public class WeChatMessage extends WeChatObject implements Serializable {
         message.setFromUserName(json.getString("FromUserName"));
         message.setToUserName(json.getString("ToUserName"));
         message.setMsgType(json.getInt("MsgType"));
+        message.setTime(getTimestamp(json.getLong("CreateTime")));
         return message;
     }
 
@@ -114,6 +122,15 @@ public class WeChatMessage extends WeChatObject implements Serializable {
 
     public WeChatMessage setReceived(boolean received) {
         this.received = received;
+        return this;
+    }
+
+    public Instant getTime() {
+        return time;
+    }
+
+    public WeChatMessage setTime(Instant time) {
+        this.time = time;
         return this;
     }
 

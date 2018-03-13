@@ -26,7 +26,7 @@ import java.util.EventListener;
 
 /**
  *
- * @author henning
+ * @author Henning <henning@huhehu.com>
  */
 public interface WeChatMultiEventHandler<T> extends EventListener {
 

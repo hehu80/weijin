@@ -27,6 +27,10 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 
+/**
+ *
+ * @author Henning <henning@huhehu.com>
+ */
 public class WeChatContact extends WeChatObject implements Serializable {
 
     private long uin;

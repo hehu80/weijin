@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  *
- * @author henning
+ * @author Henning <henning@huhehu.com>
  */
 public interface WeChatSingleEventHandler<T> extends EventListener {
 

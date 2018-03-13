@@ -27,10 +27,24 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URLConnection;
+import java.time.Instant;
+import java.time.LocalDateTime;
 
+/**
+ *
+ * @author Henning <henning@huhehu.com>
+ */
 public final class WeChatUtil {
 
     private WeChatUtil() {
+    }
+
+    public static long getTimestamp(Instant time) {
+        return time.getEpochSecond() / (10l * 10l * 10l);
+    }
+
+    public static Instant getTimestamp(long time) {
+        return Instant.ofEpochMilli(time * (10l * 10l * 10l));
     }
 
     public static String getStringFromInputStream(URLConnection connection, String charsetName) throws IOException {

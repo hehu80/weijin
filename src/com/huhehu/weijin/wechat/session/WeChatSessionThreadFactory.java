@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadFactory;
 
 /**
  *
- * @author henning
+ * @author Henning <henning@huhehu.com>
  */
 public class WeChatSessionThreadFactory implements ThreadFactory {
 

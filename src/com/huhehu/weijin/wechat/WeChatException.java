@@ -24,6 +24,10 @@ package com.huhehu.weijin.wechat;
 
 import java.io.IOException;
 
+/**
+ *
+ * @author Henning <henning@huhehu.com>
+ */
 public class WeChatException extends IOException {
 
     public WeChatException(String reason) {

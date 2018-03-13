@@ -26,7 +26,7 @@ import java.util.Objects;
 
 /**
  *
- * @author henning
+ * @author Henning <henning@huhehu.com>
  */
 public abstract class WeChatObject {
 

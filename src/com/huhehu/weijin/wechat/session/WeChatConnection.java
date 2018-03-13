@@ -41,9 +41,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
+import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
 import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
 import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
+import java.time.Instant;
 
+/**
+ *
+ * @author Henning <henning@huhehu.com>
+ */
 public final class WeChatConnection {
 
     private static final String APP_ID = "wx782c26e4c19acffb";
@@ -311,6 +317,7 @@ public final class WeChatConnection {
             json.put("ToUserName", message.getToUserName());
             json.put("LocalID", message.getId());
             json.put("ClientMsgId", message.getId());
+            json.put("CreateTime", getTimestamp(message.getTime()));
 
             sendJSONRequest(connection, "Msg", json);
             parseJSONResponse(connection);

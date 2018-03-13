@@ -22,6 +22,10 @@
  */
 package com.huhehu.weijin.wechat.contacts;
 
+/**
+ *
+ * @author Henning <henning@huhehu.com>
+ */
 public class WeChatUser extends WeChatContact {
 
     public static String USER_FILE_HELPER = "filehelper";

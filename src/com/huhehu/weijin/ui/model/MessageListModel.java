@@ -29,7 +29,7 @@ import javafx.application.Platform;
 
 /**
  *
- * @author henning
+ * @author Henning <henning@huhehu.com>
  */
 public class MessageListModel extends ObservableListModel<WeChatMessage> {
 

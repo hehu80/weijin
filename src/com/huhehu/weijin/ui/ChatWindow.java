@@ -33,6 +33,9 @@ import static com.huhehu.weijin.wechat.session.WeChatSession.saveSession;
 import com.huhehu.weijin.wechat.session.event.WeChatSingleEventHandler;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -58,7 +61,7 @@ import javafx.util.Callback;
 
 /**
  *
- * @author henning
+ * @author Henning <henning@huhehu.com>
  */
 public class ChatWindow extends Application {
 
@@ -71,6 +74,7 @@ public class ChatWindow extends Application {
     public static final Image ICON_WECHAT = new Image("file:wechat.png"); // TODO resource
     public static final Image ICON_AVATAR = new Image("file:avatar.png"); // TODO resource
     public static final String SESSION_FILE = "session";
+    public static final DateTimeFormatter MESSAGE_TIME_FORMAT = DateTimeFormatter.ofPattern("MM/dd HH:mm").withZone(ZoneOffset.systemDefault());
 
     public static void main(String[] args) {
         launch(args);
@@ -97,8 +101,8 @@ public class ChatWindow extends Application {
         contactsView.setCellFactory(contactCellFactory);
         contactsView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         contactsView.getSelectionModel().selectedItemProperty().addListener(contactListSelectionHandler);
-        
-        if(session.getSelectedChat() != null){
+
+        if (session.getSelectedChat() != null) {
             contactsView.getSelectionModel().select(session.getSelectedChat());
             contactsView.scrollTo(session.getSelectedChat());
         }
@@ -159,7 +163,7 @@ public class ChatWindow extends Application {
         qrCodeStage.hide();
         mainStage.hide();
         session.disconnect();
-        
+
         try {
             saveSession(session, Paths.get(SESSION_FILE));
         } catch (IOException ignore) {
@@ -209,6 +213,7 @@ public class ChatWindow extends Application {
             private BorderPane pane;
             private BorderPane contentPane;
             private Label contentLabel;
+            private Label contentTime;
             private ImageView contentMedia;
 
             @Override
@@ -222,11 +227,15 @@ public class ChatWindow extends Application {
                         contentLabel = new Label();
                         contentLabel.setStyle("-fx-text-fill:white;");
 
+                        contentTime = new Label();
+                        contentTime.setStyle("-fx-text-fill:white;-fx-font-size: 9px;");
+
                         contentMedia = new ImageView();
 
                         contentPane = new BorderPane();
                         contentPane.setCenter(contentLabel);
-                        contentPane.setPadding(new Insets(10.0d));
+                        contentPane.setBottom(contentTime);
+                        contentPane.setPadding(new Insets(5.0d));
                         contentPane.setStyle("-fx-background-color:green;");
 
                         pane = new BorderPane();
@@ -251,6 +260,8 @@ public class ChatWindow extends Application {
                         contentPane.setLeft(null);
                     }
 
+                    
+                    contentTime.setText(MESSAGE_TIME_FORMAT.format(message.getTime()));
                     contentLabel.setText(message.getContent());
                     setGraphic(pane);
                 }

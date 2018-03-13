@@ -43,7 +43,7 @@ import javax.imageio.ImageIO;
 
 /**
  *
- * @author henning
+ * @author Henning <henning@huhehu.com>
  */
 public class WeChatMediaCache {
 

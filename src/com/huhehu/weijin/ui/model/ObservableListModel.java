@@ -28,7 +28,7 @@ import javafx.collections.ModifiableObservableListBase;
 
 /**
  *
- * @author henning
+ * @author Henning <henning@huhehu.com>
  */
 public class ObservableListModel<E> extends ModifiableObservableListBase<E> {
 
