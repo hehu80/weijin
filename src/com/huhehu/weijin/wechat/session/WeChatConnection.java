@@ -44,7 +44,6 @@ import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
 import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
 import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
 import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
-import java.time.Instant;
 
 /**
  *

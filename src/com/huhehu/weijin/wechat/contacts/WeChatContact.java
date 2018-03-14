@@ -24,7 +24,6 @@ package com.huhehu.weijin.wechat.contacts;
 
 import com.huhehu.weijin.wechat.WeChatObject;
 import org.json.JSONObject;
-
 import java.io.Serializable;
 
 /**
@@ -62,6 +61,8 @@ public class WeChatContact extends WeChatObject implements Serializable {
         } else {
             WeChatUser user = new WeChatUser();
             user.setSex(json.getInt("Sex"));
+            user.setProvince(json.has("Province") ? json.getString("Province") : "");
+            user.setCity(json.has("City") ? json.getString("City") : "");
             contact = user;
         }
         contact.setUin(json.getLong("Uin"));
@@ -74,6 +75,7 @@ public class WeChatContact extends WeChatObject implements Serializable {
         contact.setVerifyFlag(json.getInt("VerifyFlag"));
         contact.setPinYinInitial(json.getString("PYInitial"));
         contact.setPinYinQuanPin(json.getString("PYQuanPin"));
+        contact.setJson(json.toString());
         return contact;
     }
 
@@ -190,14 +192,14 @@ public class WeChatContact extends WeChatObject implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!super.equals(o)) {
-            if (o != null && (o instanceof WeChatContact) && uin != 0) {
-                return uin == ((WeChatContact) o).uin;
-            } else {
-                return false;
-            }
-        } else {
+        if (o == null) {
+            return false;
+        } else if (super.equals(o)) {
             return true;
+        } else if (o instanceof WeChatObject) {
+            return uin != 0 && uin == ((WeChatContact) o).uin;
+        } else {
+            return false;
         }
     }
 

@@ -58,6 +58,7 @@ public class WeChatMessage extends WeChatObject implements Serializable {
         message.setToUserName(json.getString("ToUserName"));
         message.setMsgType(json.getInt("MsgType"));
         message.setTime(getTimestamp(json.getLong("CreateTime")));
+        message.setJson(json.toString());
         return message;
     }
 

@@ -22,13 +22,25 @@
  */
 package com.huhehu.weijin.wechat;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  *
  * @author Henning <henning@huhehu.com>
  */
-public abstract class WeChatObject {
+public abstract class WeChatObject implements Serializable {
+
+    private String json;
+
+    public String getJson() {
+        return json;
+    }
+
+    public WeChatObject setJson(String json) {
+        this.json = json;
+        return this;
+    }
 
     public abstract String getWeChatId();
 
