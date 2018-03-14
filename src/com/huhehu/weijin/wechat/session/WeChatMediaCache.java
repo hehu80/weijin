@@ -47,7 +47,14 @@ import javax.imageio.ImageIO;
  */
 public class WeChatMediaCache {
 
+    /**
+     *
+     */
     protected static final String URL_AVATAR_DOWNLOAD = "https://web.wechat.com%s";
+
+    /**
+     *
+     */
     protected static final String URL_MESSAGE_IMAGE_DOWNLOAD = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxgetmsgimg?&MsgID=%s&skey=%s&type=big";
     private static final String MEDIA_DIRECTORY = "media";
 
@@ -55,6 +62,10 @@ public class WeChatMediaCache {
     private transient Map<String, Image> images = new HashMap<>();
     private transient ExecutorService mediaDownloader;
 
+    /**
+     *
+     * @param session
+     */
     protected WeChatMediaCache(WeChatSession session) {
         this.session = session;
 
@@ -62,10 +73,19 @@ public class WeChatMediaCache {
         loadAll();
     }
 
+    /**
+     *
+     * @return
+     */
     public WeChatMediaCache clearAll() {
         return clearAll(false);
     }
 
+    /**
+     *
+     * @param hard
+     * @return
+     */
     public WeChatMediaCache clearAll(boolean hard) {
         images.clear();
 
@@ -84,6 +104,10 @@ public class WeChatMediaCache {
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public WeChatMediaCache loadAll() {
         mediaDownloader.submit(() -> {
             try {
@@ -107,23 +131,49 @@ public class WeChatMediaCache {
         return this;
     }
 
+    /**
+     *
+     */
     protected void shutdownNow() {
         mediaDownloader.shutdownNow();
         mediaDownloader = Executors.newFixedThreadPool(16, new WeChatSessionThreadFactory("WeChat-Media"));
     }
 
+    /**
+     *
+     * @param contact
+     * @param refresh
+     * @param onDownloaded
+     * @return
+     */
     public WeChatMediaCache downloadMedia(WeChatContact contact, boolean refresh, Runnable onDownloaded) {
         return downloadMedia(getContactAvatarMediaId(contact), refresh, true,
                 String.format(URL_AVATAR_DOWNLOAD, contact.getImageUrl()),
                 onDownloaded);
     }
 
+    /**
+     *
+     * @param message
+     * @param refresh
+     * @param onDownloaded
+     * @return
+     */
     public WeChatMediaCache downloadMedia(WeChatMessage message, boolean refresh, Runnable onDownloaded) {
         return downloadMedia(getMessageMediaId(message), refresh, true,
                 String.format(URL_MESSAGE_IMAGE_DOWNLOAD, message.getId(), session.getConnection().getSessionKey()),
                 onDownloaded);
     }
 
+    /**
+     *
+     * @param mediaId
+     * @param refresh
+     * @param useCache
+     * @param url
+     * @param onDownloaded
+     * @return
+     */
     protected WeChatMediaCache downloadMedia(String mediaId, boolean refresh, boolean useCache, String url, Runnable onDownloaded) {
         if (refresh || !images.containsKey(mediaId)) {
             mediaDownloader.submit(() -> {
@@ -170,26 +220,56 @@ public class WeChatMediaCache {
         return this;
     }
 
+    /**
+     *
+     * @param message
+     * @return
+     */
     public boolean isMediaMessage(WeChatMessage message) {
         return message != null && message.getMsgType() == TYPE_FILE;
     }
 
+    /**
+     *
+     * @param contact
+     * @return
+     */
     protected String getContactAvatarMediaId(WeChatContact contact) {
         return "avatar_" + contact.getSeq();
     }
 
+    /**
+     *
+     * @param message
+     * @return
+     */
     protected String getMessageMediaId(WeChatMessage message) {
         return "media_" + message.getId();
     }
 
+    /**
+     *
+     * @param contact
+     * @return
+     */
     public Image getMedia(WeChatContact contact) {
         return getMedia(getContactAvatarMediaId(contact));
     }
 
+    /**
+     *
+     * @param message
+     * @return
+     */
     public Image getMedia(WeChatMessage message) {
         return getMedia(getMessageMediaId(message));
     }
 
+    /**
+     *
+     * @param mediaId
+     * @return
+     */
     protected Image getMedia(String mediaId) {
         synchronized (images) {
             if (images.containsKey(mediaId)) {

@@ -33,17 +33,34 @@ public abstract class WeChatObject implements Serializable {
 
     private String json;
 
+    /**
+     *
+     * @return
+     */
     public String getJson() {
         return json;
     }
 
+    /**
+     *
+     * @param json
+     * @return
+     */
     public WeChatObject setJson(String json) {
         this.json = json;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public abstract String getWeChatId();
 
+    /**
+     *
+     * @return
+     */
     @Override
     public String toString() {
         if (getWeChatId() != null) {
@@ -53,6 +70,11 @@ public abstract class WeChatObject implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param o
+     * @return
+     */
     @Override
     public boolean equals(Object o) {
         if (o == null) {
@@ -68,6 +90,10 @@ public abstract class WeChatObject implements Serializable {
         }
     }
 
+    /**
+     *
+     * @return
+     */
     @Override
     public int hashCode() {
         if (getWeChatId() != null) {

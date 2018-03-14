@@ -29,39 +29,72 @@ import javafx.collections.ModifiableObservableListBase;
 /**
  *
  * @author Henning <henning@huhehu.com>
+ * @param <E>
  */
 public class ObservableListModel<E> extends ModifiableObservableListBase<E> {
 
     private List<E> elements;
 
+    /**
+     *
+     * @param elements
+     */
     public ObservableListModel(List<? extends E> elements) {
         this.elements = new ArrayList<E>(elements);
     }
 
+    /**
+     *
+     */
     public ObservableListModel() {
         this.elements = new ArrayList<E>();
     }
 
+    /**
+     *
+     * @param index
+     * @return
+     */
     @Override
     public E get(int index) {
         return elements.get(index);
     }
 
+    /**
+     *
+     * @return
+     */
     @Override
     public int size() {
         return elements.size();
     }
 
+    /**
+     *
+     * @param index
+     * @param element
+     */
     @Override
     protected void doAdd(int index, E element) {
         elements.add(index, element);
     }
 
+    /**
+     *
+     * @param index
+     * @param element
+     * @return
+     */
     @Override
     protected E doSet(int index, E element) {
         return elements.set(index, element);
     }
 
+    /**
+     *
+     * @param index
+     * @return
+     */
     @Override
     protected E doRemove(int index) {
         return elements.remove(index);

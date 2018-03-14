@@ -34,6 +34,10 @@ public class ContactListModel extends ObservableListModel<WeChatContact> {
 
     private WeChatSession session;
 
+    /**
+     *
+     * @param session
+     */
     public ContactListModel(WeChatSession session) {
         super(session.getContacts());
         this.session = session;

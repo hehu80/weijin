@@ -36,6 +36,10 @@ public class MessageListModel extends ObservableListModel<WeChatMessage> {
     private WeChatSession session;
     private WeChatContact contact;
 
+    /**
+     *
+     * @param session
+     */
     public MessageListModel(WeChatSession session) {
         super(session.getMessages(session.getSelectedChat()));
         this.session = session;

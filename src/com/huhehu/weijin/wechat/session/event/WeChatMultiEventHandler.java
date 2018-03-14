@@ -27,8 +27,13 @@ import java.util.EventListener;
 /**
  *
  * @author Henning <henning@huhehu.com>
+ * @param <T>
  */
 public interface WeChatMultiEventHandler<T> extends EventListener {
 
+    /**
+     *
+     * @param event
+     */
     public void onWeChatEvent(T[] event);
 }

@@ -30,6 +30,10 @@ import java.io.IOException;
  */
 public class WeChatException extends IOException {
 
+    /**
+     *
+     * @param reason
+     */
     public WeChatException(String reason) {
         super(reason);
     }

@@ -70,39 +70,55 @@ import javafx.util.Callback;
  */
 public class ChatWindow extends Application {
 
-    private ListView<WeChatContact> contactsView;
-    private ContextMenu contactsViewContextMenu;
-    private ListView<WeChatMessage> messageView;
-    private TextField messageField;
-    private WeChatSession session;
-    private Stage mainStage;
-    private Stage qrCodeStage;
-    private ImageView qrCodeView;
     public static final Image ICON_WECHAT = new Image("file:wechat.png"); // TODO resource
     public static final Image ICON_AVATAR = new Image("file:avatar.png"); // TODO resource
     public static final String SESSION_FILE = "session";
     public static final DateTimeFormatter MESSAGE_TIME_FORMAT = DateTimeFormatter.ofPattern("MM/dd HH:mm").withZone(ZoneOffset.systemDefault());
 
+    private ListView<WeChatContact> contactsView;
+    private ContextMenu contactsViewContextMenu;
+    private ListView<WeChatMessage> messageView;
+    private Label messageViewHeader;
+    private TextField messageField;
+    private WeChatSession session;
+    private Stage mainStage;
+    private Stage qrCodeStage;
+    private ImageView qrCodeView;
+
+    /**
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         launch(args);
     }
 
+    /**
+     *
+     * @param primaryStage
+     */
     @Override
     public void start(Stage primaryStage) {
-        try {
-            session = loadSession(Paths.get(SESSION_FILE));
-        } catch (IOException | ClassNotFoundException ignore) {
-            session = new WeChatSession();
-        }
-
+        session = createSession();
         mainStage = primaryStage;
 
+        messageViewHeader = new Label("");
+        messageViewHeader.setStyle("-fx-background-color:lightgray;-fx-text-fill:black;");
+        messageViewHeader.setPadding(new Insets(5.0d));
+        messageViewHeader.setAlignment(Pos.CENTER);
+        messageViewHeader.setPrefWidth(Double.MAX_VALUE);
+        
         messageField = new TextField();
         messageField.setOnAction(onMessageInput);
 
         messageView = new ListView(new MessageListModel(session));
         messageView.setCellFactory(messageCellFactory);
         messageView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+        BorderPane messagePane = new BorderPane();
+        messagePane.setTop(messageViewHeader);
+        messagePane.setCenter(messageView);
+        messagePane.setBottom(messageField);
 
         contactsView = new ListView(new ContactListModel(session));
         contactsView.setCellFactory(contactCellFactory);
@@ -118,13 +134,9 @@ public class ChatWindow extends Application {
         contactsViewContextMenu.getItems().addAll(createMenuItem("Contact Details", onContactDetails));
         contactsViewContextMenu.getItems().addAll(createMenuItem("Show JSON", onContactJSON));
 
-        BorderPane chatPane = new BorderPane();
-        chatPane.setCenter(messageView);
-        chatPane.setBottom(messageField);
-
         BorderPane rootPane = new BorderPane();
         rootPane.setLeft(contactsView);
-        rootPane.setCenter(chatPane);
+        rootPane.setCenter(messagePane);
 
         mainStage.setOnCloseRequest(onStageClosed);
         mainStage.setTitle("WeiJin");
@@ -140,6 +152,14 @@ public class ChatWindow extends Application {
         session.setOnSessionConnect(onSesssionConnect);
         session.setOnSessionChatSelected(onSessionChatSelected);
         session.connect();
+    }
+    
+    private WeChatSession createSession(){
+        try {
+            return loadSession(Paths.get(SESSION_FILE));
+        } catch (IOException | ClassNotFoundException ignore) {
+            return new WeChatSession();
+        }        
     }
 
     private MenuItem createMenuItem(String text, EventHandler<ActionEvent> eventHandler) {
@@ -177,6 +197,7 @@ public class ChatWindow extends Application {
             if (user != contactsView.getSelectionModel().getSelectedItem()) {
                 contactsView.getSelectionModel().select(user);
                 contactsView.scrollTo(user);
+                messageViewHeader.setText(user.getNickName());
             }
         });
     };
@@ -250,6 +271,7 @@ public class ChatWindow extends Application {
     private final ChangeListener<WeChatContact> onContactSelected = (observable, oldSelection, newSelection) -> {
         session.selectChat(newSelection);
         messageView.setItems(new MessageListModel(session));
+        messageViewHeader.setText(newSelection.getNickName());
     };
 
     private final Callback<ListView<WeChatContact>, ListCell<WeChatContact>> contactCellFactory = (list) -> {
@@ -284,7 +306,7 @@ public class ChatWindow extends Application {
                 contentLabel.setStyle("-fx-text-fill:white;");
 
                 contentTime = new Label();
-                contentTime.setStyle("-fx-text-fill:white;-fx-font-size: 9px;");
+                contentTime.setStyle("-fx-text-fill:lightgray;-fx-font-size: 9px;");
 
                 contentMedia = new ImageView();
 

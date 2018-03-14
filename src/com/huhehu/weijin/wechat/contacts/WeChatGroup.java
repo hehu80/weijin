@@ -31,19 +31,37 @@ public class WeChatGroup extends WeChatContact {
     private int memberCount;
     private int ownerUin;
 
+    /**
+     *
+     * @return
+     */
     public int getOwnerUin() {
         return ownerUin;
     }
 
+    /**
+     *
+     * @param ownerUin
+     * @return
+     */
     public WeChatGroup setOwnerUin(int ownerUin) {
         this.ownerUin = ownerUin;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getMemberCount() {
         return memberCount;
     }
 
+    /**
+     *
+     * @param memberCount
+     * @return
+     */
     public WeChatGroup setMemberCount(int memberCount) {
         this.memberCount = memberCount;
         return this;

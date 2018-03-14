@@ -28,8 +28,13 @@ import java.util.List;
 /**
  *
  * @author Henning <henning@huhehu.com>
+ * @param <T>
  */
 public interface WeChatSingleEventHandler<T> extends EventListener {
 
+    /**
+     *
+     * @param event
+     */
     public void onWeChatEvent(T event);
 }

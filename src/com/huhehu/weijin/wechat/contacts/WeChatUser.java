@@ -29,43 +29,79 @@ package com.huhehu.weijin.wechat.contacts;
 public class WeChatUser extends WeChatContact {
 
     public static String USER_FILE_HELPER = "filehelper";
-
+    
     private String alias;
     private String city;
     private String province;
     private int sex; // 0: no, 1: male, 2: female
 
+    /**
+     *
+     * @return
+     */
     public int getSex() {
         return sex;
     }
 
+    /**
+     *
+     * @param sex
+     * @return
+     */
     public WeChatUser setSex(int sex) {
         this.sex = sex;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getAlias() {
         return alias;
     }
 
+    /**
+     *
+     * @param alias
+     * @return
+     */
     public WeChatUser setAlias(String alias) {
         this.alias = alias;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getCity() {
         return city;
     }
 
+    /**
+     *
+     * @param city
+     * @return
+     */
     public WeChatUser setCity(String city) {
         this.city = city;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getProvince() {
         return province;
     }
 
+    /**
+     *
+     * @param province
+     * @return
+     */
     public WeChatUser setProvince(String province) {
         this.province = province;
         return this;

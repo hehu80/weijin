@@ -50,6 +50,11 @@ public class WeChatMessage extends WeChatObject implements Serializable {
     private int msgType;
     private Instant time;
 
+    /**
+     *
+     * @param json
+     * @return
+     */
     public static WeChatMessage fromJson(JSONObject json) {
         WeChatMessage message = new WeChatMessage();
         message.setId(json.getString("MsgId"));
@@ -62,79 +67,156 @@ public class WeChatMessage extends WeChatObject implements Serializable {
         return message;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     *
+     * @param id
+     * @return
+     */
     public WeChatMessage setId(String id) {
         this.id = id;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getContent() {
         return content;
     }
 
+    /**
+     *
+     * @param content
+     * @return
+     */
     public WeChatMessage setContent(String content) {
         this.content = content;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getFromUserName() {
         return fromUserName;
     }
 
+    /**
+     *
+     * @param fromUserName
+     * @return
+     */
     public WeChatMessage setFromUserName(String fromUserName) {
         this.fromUserName = fromUserName;
         return this;
     }
 
+    /**
+     *
+     * @param fromUser
+     * @return
+     */
     public WeChatMessage setFromUserName(WeChatContact fromUser) {
         this.fromUserName = fromUser.getUserName();
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public String getToUserName() {
         return toUserName;
     }
 
+    /**
+     *
+     * @param toUserName
+     * @return
+     */
     public WeChatMessage setToUserName(String toUserName) {
         this.toUserName = toUserName;
         return this;
     }
 
+    /**
+     *
+     * @param toUser
+     * @return
+     */
     public WeChatMessage setToUserName(WeChatContact toUser) {
         this.toUserName = toUser.getUserName();
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public int getMsgType() {
         return msgType;
     }
 
+    /**
+     *
+     * @param msgType
+     * @return
+     */
     public WeChatMessage setMsgType(int msgType) {
         this.msgType = msgType;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean isReceived() {
         return received;
     }
 
+    /**
+     *
+     * @param received
+     * @return
+     */
     public WeChatMessage setReceived(boolean received) {
         this.received = received;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     public Instant getTime() {
         return time;
     }
 
+    /**
+     *
+     * @param time
+     * @return
+     */
     public WeChatMessage setTime(Instant time) {
         this.time = time;
         return this;
     }
 
+    /**
+     *
+     * @return
+     */
     @Override
     public String getWeChatId() {
         return id;

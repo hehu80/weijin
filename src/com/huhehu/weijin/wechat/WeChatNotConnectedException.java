@@ -28,6 +28,10 @@ package com.huhehu.weijin.wechat;
  * @author Henning <henning@huhehu.com>
  */
 public class WeChatNotConnectedException extends WeChatException {
+
+    /**
+     *
+     */
     public WeChatNotConnectedException() {
         super("not connected, please connect first");
     }

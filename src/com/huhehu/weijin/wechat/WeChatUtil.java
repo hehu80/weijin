@@ -38,14 +38,31 @@ public final class WeChatUtil {
     private WeChatUtil() {
     }
 
+    /**
+     *
+     * @param time
+     * @return
+     */
     public static long getTimestamp(Instant time) {
         return time.getEpochSecond() / (10l * 10l * 10l);
     }
 
+    /**
+     *
+     * @param time
+     * @return
+     */
     public static Instant getTimestamp(long time) {
         return Instant.ofEpochMilli(time * (10l * 10l * 10l));
     }
 
+    /**
+     *
+     * @param connection
+     * @param charsetName
+     * @return
+     * @throws IOException
+     */
     public static String getStringFromInputStream(URLConnection connection, String charsetName) throws IOException {
         String string;
         try (InputStream input = connection.getInputStream()) {
@@ -54,6 +71,13 @@ public final class WeChatUtil {
         return string;
     }
 
+    /**
+     *
+     * @param input
+     * @param charsetName
+     * @return
+     * @throws IOException
+     */
     public static String getStringFromInputStream(InputStream input, String charsetName) throws IOException {
         int n;
         char[] buffer = new char[1024];
@@ -65,10 +89,24 @@ public final class WeChatUtil {
         return writer.toString();
     }
 
+    /**
+     *
+     * @param connection
+     * @param key
+     * @param charsetName
+     * @return
+     * @throws IOException
+     */
     public static String getValueFromJavaScript(URLConnection connection, String key, String charsetName) throws IOException {
         return getValueFromJavaScript(getStringFromInputStream(connection, charsetName), key);
     }
 
+    /**
+     *
+     * @param javaScript
+     * @param key
+     * @return
+     */
     public static String getValueFromJavaScript(String javaScript, String key) {
         try {
             int firstKeyEnd = javaScript.indexOf("=");

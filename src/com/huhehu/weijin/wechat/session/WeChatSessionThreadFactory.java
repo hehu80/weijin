@@ -33,10 +33,19 @@ public class WeChatSessionThreadFactory implements ThreadFactory {
     private String identifier;
     private int index;
     
+    /**
+     *
+     * @param identifier
+     */
     public WeChatSessionThreadFactory(String identifier) {
         this.identifier = identifier;
     }
     
+    /**
+     *
+     * @param r
+     * @return
+     */
     @Override
     public Thread newThread(Runnable r) {
         Thread thread = new Thread(r);

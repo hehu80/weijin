@@ -74,16 +74,26 @@ public class WeChatSession implements Serializable {
         mediaCache.loadAll(); // just start loading all files directly again
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean isConnected() {
         return connection != null && connection.isConnected();
     }
 
+    /**
+     *
+     */
     public void connect() {
         if (connection == null) {
             connection = new WeChatConnection(this);
         }
     }
 
+    /**
+     *
+     */
     public void disconnect() {
         if (connection != null) {
             connection.shutdownNow();
@@ -93,6 +103,11 @@ public class WeChatSession implements Serializable {
         mediaCache.shutdownNow();
     }
 
+    /**
+     *
+     * @param message
+     * @throws WeChatException
+     */
     public synchronized void sendMessage(WeChatMessage message) throws WeChatException {
         if (!isConnected()) {
             throw new WeChatException("please connect first before send a new message");
@@ -102,16 +117,28 @@ public class WeChatSession implements Serializable {
         connection.sendMessage(message);
     }
 
+    /**
+     *
+     * @param contact
+     */
     public synchronized void selectChat(WeChatContact contact) {
         if (activeUser == null || !activeUser.equals(contact)) {
             onChatSelected(contact);
         }
     }
 
+    /**
+     *
+     * @param e
+     */
     protected synchronized void onError(Exception e) {
         fireEvents(onSessionError, e);
     }
 
+    /**
+     *
+     * @param newMessages
+     */
     protected synchronized void onMessageReceived(WeChatMessage... newMessages) {
         for (WeChatMessage message : newMessages) {
             if (loginUser.equals(message.getToUserName())) {
@@ -157,6 +184,10 @@ public class WeChatSession implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param newContacts
+     */
     protected synchronized void onContactReceived(WeChatContact... newContacts) {
         // CAUTION: each session we have to update the contact names
         // since WeChat is changeing them all after each login
@@ -196,6 +227,10 @@ public class WeChatSession implements Serializable {
         onContactUpdated(newContacts);
     }
 
+    /**
+     *
+     * @param newContacts
+     */
     protected synchronized void onContactUpdated(WeChatContact... newContacts) {
         for (WeChatContact contact : newContacts) {
             int index = contacts.indexOf(contact);
@@ -213,6 +248,10 @@ public class WeChatSession implements Serializable {
         fireEvents(onContactUpdated, newContacts);
     }
 
+    /**
+     *
+     * @param contact
+     */
     protected synchronized void onChatSelected(WeChatContact contact) {
         if (activeUser == null || !activeUser.equals(contact)) {
             activeUser = getContact(contact);
@@ -220,6 +259,10 @@ public class WeChatSession implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param user
+     */
     protected synchronized void onConnect(WeChatContact user) {
         loginUser = getContact(user);
         if (!loginUser.equals(logoutUser)) {
@@ -230,10 +273,17 @@ public class WeChatSession implements Serializable {
         fireEvents(onSessionConnect, loginUser);
     }
 
+    /**
+     *
+     */
     protected synchronized void onDisconnect() {
         fireEvents(onSessionDisconnect, logoutUser);
     }
 
+    /**
+     *
+     * @param url
+     */
     protected synchronized void onQRCodeReceived(String url) {
         mediaCache.downloadMedia("qrCode", true, false, url, () -> {
             if (!connection.isConnected()) {
@@ -242,22 +292,44 @@ public class WeChatSession implements Serializable {
         });
     }
 
+    /**
+     *
+     * @return
+     */
     public synchronized WeChatContact getLoginUser() {
         return getContact(loginUser);
     }
 
+    /**
+     *
+     * @return
+     */
     public synchronized WeChatContact getSelectedChat() {
         return getContact(activeUser);
     }
 
+    /**
+     *
+     * @return
+     */
     public synchronized WeChatContact getFileHelper() {
         return getContact(USER_FILE_HELPER);
     }
 
+    /**
+     *
+     * @param userName
+     * @return
+     */
     public synchronized WeChatContact getContact(String userName) {
         return getContact(new WeChatContact(userName));
     }
 
+    /**
+     *
+     * @param contact
+     * @return
+     */
     public synchronized WeChatContact getContact(WeChatContact contact) {
         if (contact == null) {
             return null;
@@ -271,10 +343,19 @@ public class WeChatSession implements Serializable {
         }
     }
 
+    /**
+     *
+     * @return
+     */
     public synchronized List<WeChatContact> getContacts() {
         return new ArrayList<>(contacts);
     }
 
+    /**
+     *
+     * @param contact
+     * @return
+     */
     public synchronized List<WeChatMessage> getMessages(WeChatContact contact) {
         if (chats.containsKey(contact)) {
             return new ArrayList<>(chats.get(contact));
@@ -283,18 +364,36 @@ public class WeChatSession implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param contact
+     * @return
+     */
     public Image getMedia(WeChatContact contact) {
         return mediaCache == null ? null : mediaCache.getMedia(contact);
     }
 
+    /**
+     *
+     * @param message
+     * @return
+     */
     public Image getMedia(WeChatMessage message) {
         return mediaCache == null ? null : mediaCache.getMedia(message);
     }
 
+    /**
+     *
+     * @return
+     */
     public WeChatConnection getConnection() {
         return connection;
     }
 
+    /**
+     *
+     * @return
+     */
     public WeChatMediaCache getMediaCache() {
         return mediaCache;
     }
@@ -309,46 +408,93 @@ public class WeChatSession implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param onContactUpdatedHandler
+     * @return
+     */
     public WeChatSession setOnContactUpdated(WeChatMultiEventHandler<WeChatContact> onContactUpdatedHandler) {
         this.onContactUpdated = onContactUpdatedHandler;
         return this;
     }
 
+    /**
+     *
+     * @param onMessageReceivedHandler
+     * @return
+     */
     public WeChatSession setOnMessageReceived(WeChatMultiEventHandler<WeChatMessage> onMessageReceivedHandler) {
         this.onMessageReceived = onMessageReceivedHandler;
         return this;
     }
 
+    /**
+     *
+     * @param onMessageUpdatedHandler
+     * @return
+     */
     public WeChatSession setOnMessageUpdated(WeChatMultiEventHandler<WeChatMessage> onMessageUpdatedHandler) {
         this.onMessageUpdated = onMessageUpdatedHandler;
         return this;
     }
 
+    /**
+     *
+     * @param onSessionErrorHandler
+     * @return
+     */
     public WeChatSession setOnSessionError(WeChatMultiEventHandler<Exception> onSessionErrorHandler) {
         this.onSessionError = onSessionErrorHandler;
         return this;
     }
 
+    /**
+     *
+     * @param onSessionQRCodeReceivedHandler
+     * @return
+     */
     public WeChatSession setOnSessionQRCodeReceived(WeChatSingleEventHandler<Image> onSessionQRCodeReceivedHandler) {
         this.onSessionQRCodeReceived = onSessionQRCodeReceivedHandler;
         return this;
     }
 
+    /**
+     *
+     * @param onSessionConnectHandler
+     * @return
+     */
     public WeChatSession setOnSessionConnect(WeChatSingleEventHandler<WeChatContact> onSessionConnectHandler) {
         this.onSessionConnect = onSessionConnectHandler;
         return this;
     }
 
+    /**
+     *
+     * @param onSessionDisconnectHandler
+     * @return
+     */
     public WeChatSession setOnSessionDisconnect(WeChatSingleEventHandler<WeChatContact> onSessionDisconnectHandler) {
         this.onSessionDisconnect = onSessionDisconnectHandler;
         return this;
     }
 
+    /**
+     *
+     * @param onSessionChatSelectedHandler
+     * @return
+     */
     public WeChatSession setOnSessionChatSelected(WeChatSingleEventHandler<WeChatContact> onSessionChatSelectedHandler) {
         this.onSessionChatSelected = onSessionChatSelectedHandler;
         return this;
     }
 
+    /**
+     *
+     * @param session
+     * @param path
+     * @return
+     * @throws IOException
+     */
     public static WeChatSession saveSession(WeChatSession session, Path path) throws IOException {
         try (FileOutputStream connectionFile = new FileOutputStream(path.toFile())) {
             try (ObjectOutputStream output = new ObjectOutputStream(connectionFile)) {
@@ -358,6 +504,13 @@ public class WeChatSession implements Serializable {
         return session;
     }
 
+    /**
+     *
+     * @param path
+     * @return
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     public static WeChatSession loadSession(Path path) throws IOException, ClassNotFoundException {
         try (FileInputStream connectionFile = new FileInputStream(path.toFile())) {
             try (ObjectInputStream input = new ObjectInputStream(connectionFile)) {
