@@ -22,18 +22,19 @@
  */
 package com.huhehu.weijin.wechat.contacts;
 
-import com.huhehu.weijin.wechat.WeChatObject;
+import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import org.json.JSONObject;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  *
  * @author Henning <henning@huhehu.com>
  */
-public class WeChatContact extends WeChatObject implements Serializable {
+public class WeChatContact implements Serializable {
 
     private long uin;
-    private String userName;
+    private String userId;
     private String nickName;
     private String imageUrl;
     private int contactFlag;
@@ -43,6 +44,7 @@ public class WeChatContact extends WeChatObject implements Serializable {
     private String pinYinInitial;
     private String pinYinQuanPin;
     private String seq;
+    private String json;
 
     /**
      *
@@ -52,10 +54,10 @@ public class WeChatContact extends WeChatObject implements Serializable {
 
     /**
      *
-     * @param userName
+     * @param userId
      */
-    public WeChatContact(String userName) {
-        this.userName = userName;
+    public WeChatContact(String userId) {
+        this.userId = userId;
     }
 
     /**
@@ -109,12 +111,13 @@ public class WeChatContact extends WeChatObject implements Serializable {
         return this;
     }
 
-    /**
-     *
-     * @return
-     */
-    public String getUserName() {
-        return userName;
+    public String getUserId() {
+        return userId;
+    }
+
+    public WeChatContact setUserId(String userId) {
+        this.userId = userId;
+        return this;
     }
 
     /**
@@ -123,7 +126,7 @@ public class WeChatContact extends WeChatObject implements Serializable {
      * @return
      */
     public WeChatContact setUserName(String userName) {
-        this.userName = userName;
+        this.userId = userName;
         return this;
     }
 
@@ -283,7 +286,7 @@ public class WeChatContact extends WeChatObject implements Serializable {
      * @return
      */
     public String getSeq() {
-        return seq == null ? userName : seq;
+        return seq == null ? userId : seq;
     }
 
     /**
@@ -300,27 +303,50 @@ public class WeChatContact extends WeChatObject implements Serializable {
      *
      * @return
      */
-    @Override
-    public String getWeChatId() {
-        return userName;
+    public String getJson() {
+        return json;
     }
 
     /**
      *
-     * @param o
+     * @param json
+     * @return
+     */
+    public WeChatContact setJson(String json) {
+        this.json = json;
+        return this;
+    }
+
+    /**
+     *
      * @return
      */
     @Override
-    public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        } else if (super.equals(o)) {
-            return true;
-        } else if (o instanceof WeChatObject) {
-            return uin != 0 && uin == ((WeChatContact) o).uin;
+    public String toString() {
+        if (nickName != null) {
+            return nickName;
         } else {
-            return false;
+            return userId;
         }
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 73 * hash + Objects.hashCode(this.userId);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (!(obj instanceof WeChatContact)) {
+            return false;
+        } else {
+            return userId != null && userId.equals(((WeChatContact) obj).userId);
+        }
+    }
 }

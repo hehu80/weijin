@@ -41,35 +41,21 @@ public class MessageListModel extends ObservableListModel<WeChatMessage> {
      * @param session
      */
     public MessageListModel(WeChatSession session) {
-        super(session.getMessages(session.getSelectedChat()));
+        super(session.getMessages(session.getUserActive()));
         this.session = session;
-        this.contact = session.getSelectedChat();
+        this.contact = session.getUserActive();
 
         this.session.setOnMessageReceived((messages) -> {
             Platform.runLater(() -> {
                 beginChange();
                 if (contact != null) {
                     for (WeChatMessage message : messages) {
-                        if (contact.equals(message.getToUserName()) || contact.equals(message.getFromUserName())) {
+                        if(message.getToUser().equals(contact)  || message.getFromUser().equals(contact)){
                             add(message);
                         }
                     }
                 }
                 endChange();
-            });
-        });
-
-        this.session.setOnMessageUpdated((messages) -> {
-            Platform.runLater(() -> {
-                for (WeChatMessage message : messages) {
-                    int index = indexOf(message);
-
-                    if (index >= 0) {
-                        beginChange();
-                        set(index, message);
-                        endChange();
-                    }
-                }
             });
         });
     }

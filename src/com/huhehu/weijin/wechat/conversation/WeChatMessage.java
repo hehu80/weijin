@@ -22,18 +22,20 @@
  */
 package com.huhehu.weijin.wechat.conversation;
 
-import com.huhehu.weijin.wechat.WeChatObject;
 import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import com.huhehu.weijin.wechat.contacts.WeChatUser;
+import com.huhehu.weijin.wechat.session.WeChatSession;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.Objects;
 import org.json.JSONObject;
 
 /**
  *
  * @author Henning <henning@huhehu.com>
  */
-public class WeChatMessage extends WeChatObject implements Serializable {
+public class WeChatMessage implements Serializable {
 
     public static int TYPE_TEXT = 1;
     public static int TYPE_CHAT_CHANGE = 51;
@@ -42,13 +44,14 @@ public class WeChatMessage extends WeChatObject implements Serializable {
     public static int TYPE_FILE = 49;
     public static int TYPE_REJECT_MESSAGE = 10002;
 
-    private String id;
+    private String messageId;
     private String content;
-    private String fromUserName;
-    private String toUserName;
+    private WeChatContact fromUser;
+    private WeChatContact toUser;
     private boolean received;
     private int msgType;
     private Instant time;
+    private String json;
 
     /**
      *
@@ -59,8 +62,8 @@ public class WeChatMessage extends WeChatObject implements Serializable {
         WeChatMessage message = new WeChatMessage();
         message.setId(json.getString("MsgId"));
         message.setContent(json.getString("Content"));
-        message.setFromUserName(json.getString("FromUserName"));
-        message.setToUserName(json.getString("ToUserName"));
+        message.setFromUser(new WeChatContact(json.getString("FromUserName")));
+        message.setToUser(new WeChatContact(json.getString("ToUserName")));
         message.setMsgType(json.getInt("MsgType"));
         message.setTime(getTimestamp(json.getLong("CreateTime")));
         message.setJson(json.toString());
@@ -71,8 +74,8 @@ public class WeChatMessage extends WeChatObject implements Serializable {
      *
      * @return
      */
-    public String getId() {
-        return id;
+    public String getMessageId() {
+        return messageId;
     }
 
     /**
@@ -81,7 +84,7 @@ public class WeChatMessage extends WeChatObject implements Serializable {
      * @return
      */
     public WeChatMessage setId(String id) {
-        this.id = id;
+        this.messageId = id;
         return this;
     }
 
@@ -107,18 +110,8 @@ public class WeChatMessage extends WeChatObject implements Serializable {
      *
      * @return
      */
-    public String getFromUserName() {
-        return fromUserName;
-    }
-
-    /**
-     *
-     * @param fromUserName
-     * @return
-     */
-    public WeChatMessage setFromUserName(String fromUserName) {
-        this.fromUserName = fromUserName;
-        return this;
+    public WeChatContact getFromUser() {
+        return fromUser;
     }
 
     /**
@@ -126,8 +119,8 @@ public class WeChatMessage extends WeChatObject implements Serializable {
      * @param fromUser
      * @return
      */
-    public WeChatMessage setFromUserName(WeChatContact fromUser) {
-        this.fromUserName = fromUser.getUserName();
+    public WeChatMessage setFromUser(WeChatContact fromUser) {
+        this.fromUser = fromUser;
         return this;
     }
 
@@ -135,18 +128,8 @@ public class WeChatMessage extends WeChatObject implements Serializable {
      *
      * @return
      */
-    public String getToUserName() {
-        return toUserName;
-    }
-
-    /**
-     *
-     * @param toUserName
-     * @return
-     */
-    public WeChatMessage setToUserName(String toUserName) {
-        this.toUserName = toUserName;
-        return this;
+    public WeChatContact getToUser() {
+        return toUser;
     }
 
     /**
@@ -154,8 +137,8 @@ public class WeChatMessage extends WeChatObject implements Serializable {
      * @param toUser
      * @return
      */
-    public WeChatMessage setToUserName(WeChatContact toUser) {
-        this.toUserName = toUser.getUserName();
+    public WeChatMessage setToUser(WeChatContact toUser) {
+        this.toUser = toUser;
         return this;
     }
 
@@ -213,12 +196,45 @@ public class WeChatMessage extends WeChatObject implements Serializable {
         return this;
     }
 
+    public String getJson() {
+        return json;
+    }
+
+    public WeChatMessage setJson(String json) {
+        this.json = json;
+        return this;
+    }
+
     /**
      *
      * @return
      */
     @Override
-    public String getWeChatId() {
-        return id;
+    public String toString() {
+        if (content != null) {
+            return content;
+        } else {
+            return messageId;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 73 * hash + Objects.hashCode(this.messageId);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (!(obj instanceof WeChatMessage)) {
+            return false;
+        } else {
+            return messageId != null && messageId.equals(((WeChatMessage) obj).messageId);
+        }
     }
 }

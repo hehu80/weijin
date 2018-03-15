@@ -33,6 +33,20 @@ public class WeChatGroup extends WeChatContact {
 
     /**
      *
+     */
+    public WeChatGroup() {
+    }
+
+    /**
+     *
+     * @param userName
+     */
+    public WeChatGroup(String userName) {
+        super(userName);
+    }
+
+    /**
+     *
      * @return
      */
     public int getOwnerUin() {

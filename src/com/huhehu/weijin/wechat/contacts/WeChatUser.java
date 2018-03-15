@@ -29,11 +29,25 @@ package com.huhehu.weijin.wechat.contacts;
 public class WeChatUser extends WeChatContact {
 
     public static String USER_FILE_HELPER = "filehelper";
-    
+
     private String alias;
     private String city;
     private String province;
     private int sex; // 0: no, 1: male, 2: female
+
+    /**
+     *
+     */
+    public WeChatUser() {
+    }
+
+    /**
+     *
+     * @param userName
+     */
+    public WeChatUser(String userName) {
+        super(userName);
+    }
 
     /**
      *

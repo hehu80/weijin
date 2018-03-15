@@ -43,6 +43,7 @@ import java.util.concurrent.Executors;
 import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
 import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
 import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
+import com.huhehu.weijin.wechat.contacts.WeChatUser;
 import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
 
 /**
@@ -257,6 +258,13 @@ public final class WeChatConnection {
     private JSONObject parseJSONResponse(HttpsURLConnection connection) throws IOException {
         JSONObject json = new JSONObject(getStringFromInputStream(connection, "UTF-8"));
 
+        if (isConnected()) {
+            String s = json.toString();
+            if (s.contains("@")) {
+                System.out.println(s);
+            }
+        }
+
         if (json.has("BaseResponse")) {
             int result = json.getJSONObject("BaseResponse").getInt("Ret");
             if (1101 == result) {
@@ -272,6 +280,54 @@ public final class WeChatConnection {
             for (Object key : json.getJSONObject("SyncKey").getJSONArray("List")) {
                 wxsynckey.put(((JSONObject) key).getLong("Key"), ((JSONObject) key).getLong("Val"));
             }
+        }
+
+        if (!isConnected() && json.has("User")) {
+            user = WeChatContact.fromJson((JSONObject) json.get("User"));
+            if (isConnected()) {
+                eventHandler.submit(() -> session.onConnect(user)); // TODO refresh user
+            }
+        }
+
+        if (isConnected() && json.has("ContactList")) {
+            List<WeChatContact> contacts = new ArrayList<WeChatContact>();
+            for (Object member : json.getJSONArray("ContactList")) {
+                contacts.add(WeChatContact.fromJson((JSONObject) member));
+            }
+            eventHandler.submit(() -> session.onContactActiveUpdated(contacts.toArray(new WeChatContact[contacts.size()])));
+        }
+
+        // DEL CONTACT LIST
+        // MOD CONTACT LIST
+        List<WeChatMessage> messages = new ArrayList<>();
+        if (isConnected() && json.has("AddMsgList")) {
+            for (int i = 0; i < json.getJSONArray("AddMsgList").length(); i++) {
+                WeChatMessage message = WeChatMessage.fromJson(json.getJSONArray("AddMsgList").getJSONObject(i));
+                if (message.getMsgType() == TYPE_CHAT_CHANGE) {
+                    WeChatContact contact = user.equals(message.getToUser()) ? message.getFromUser() : message.getToUser();
+                    eventHandler.submit(() -> session.onUserActivate(contact));
+                } else {
+                    messages.add(message);
+                }
+            }
+        }
+
+        if (isConnected() &&  json.has("MPSubscribeMsgList") && json.getJSONArray("MPSubscribeMsgList").length() > 0) {
+            JSONObject articleList = json.getJSONArray("MPSubscribeMsgList").getJSONObject(0);
+            WeChatUser articleListOwner = new WeChatUser(articleList.getString("UserName"));
+            for (int i = 0; i < articleList.getJSONArray("MPArticleList").length(); i++) {
+                // TODO move to external
+                WeChatMessage article = new WeChatMessage();
+                article.setFromUser(articleListOwner);
+                article.setToUser(user);
+                article.setContent(articleList.getJSONArray("MPArticleList").getJSONObject(i).getString("Title"));
+                article.setJson(articleList.getJSONArray("MPArticleList").getJSONObject(i).toString());
+                messages.add(article);
+                // TODO maybe old message
+            }
+        }
+        if (!messages.isEmpty()) {
+            eventHandler.submit(() -> session.onMessageReceived(messages.toArray(new WeChatMessage[messages.size()])));
         }
 
         return json;
@@ -294,24 +350,7 @@ public final class WeChatConnection {
 
         sendJSONRequest(connection, "SyncKey", json);
 
-        json = parseJSONResponse(connection);        
-
-        List<WeChatMessage> messages = new ArrayList<>();
-        if (json.has("AddMsgList")) {
-            for (int i = 0; i < json.getJSONArray("AddMsgList").length(); i++) {
-                WeChatMessage message = WeChatMessage.fromJson(json.getJSONArray("AddMsgList").getJSONObject(i));
-                if (message.getMsgType() == TYPE_CHAT_CHANGE) {
-                    final WeChatContact contact = new WeChatContact(user.equals(message.getToUserName()) ? message.getFromUserName() : message.getToUserName());
-                    eventHandler.submit(() -> session.onChatSelected(contact));
-                } else {
-                    messages.add(message);
-                }
-            }
-        }
-
-        if (!messages.isEmpty()) {
-            eventHandler.submit(() -> session.onMessageReceived(messages.toArray(new WeChatMessage[messages.size()])));
-        }
+        json = parseJSONResponse(connection);
     }
 
     private void retreiveContacts() throws IOException {
@@ -322,7 +361,7 @@ public final class WeChatConnection {
             contacts.add(WeChatContact.fromJson((JSONObject) member));
         }
 
-        eventHandler.submit(() -> session.onContactReceived(contacts.toArray(new WeChatContact[contacts.size()])));
+        eventHandler.submit(() -> session.onContactSavedUpdated(contacts.toArray(new WeChatContact[contacts.size()])));
     }
 
     private boolean retrieveUserId() throws IOException {
@@ -342,6 +381,7 @@ public final class WeChatConnection {
             connection = openConnection(redirect + "&fun=new&version=v2&lang=de_");
             String response = getStringFromInputStream(connection, "UTF-8");
 
+            user = null;
             wxskey = response.substring(response.indexOf("<skey>") + 6, response.indexOf("</skey>"));
             wxsid = response.substring(response.indexOf("<wxsid>") + 7, response.indexOf("</wxsid>"));
             wxuin = response.substring(response.indexOf("<wxuin>") + 7, response.indexOf("</wxuin>"));
@@ -355,11 +395,8 @@ public final class WeChatConnection {
             connection = openConnection(String.format(URL_INIT, wxpassticket));
             sendJSONRequest(connection);
 
-            JSONObject json = parseJSONResponse(connection);
-            if (json.has("User")) {
-                user = WeChatContact.fromJson((JSONObject) json.get("User"));
-                return true;
-            }
+            parseJSONResponse(connection);
+            return isConnected();
         } else if (!"408".equals(code)) {
             throw new WeChatException("Connection refused");
         }
@@ -384,10 +421,10 @@ public final class WeChatConnection {
             JSONObject json = new JSONObject();
             json.put("Type", message.getMsgType() == 0 ? 1 : message.getMsgType());
             json.put("Content", message.getContent());
-            json.put("FromUserName", user.getUserName());
-            json.put("ToUserName", message.getToUserName());
-            json.put("LocalID", message.getId());
-            json.put("ClientMsgId", message.getId());
+            json.put("FromUserName", user.getUserId());
+            json.put("ToUserName", message.getToUser().getUserId());
+            json.put("LocalID", message.getMessageId());
+            json.put("ClientMsgId", message.getMessageId());
             json.put("CreateTime", getTimestamp(message.getTime()));
 
             sendJSONRequest(connection, "Msg", json);
@@ -421,12 +458,12 @@ public final class WeChatConnection {
                     if (wxuuid != null) {
                         try {
                             if (retreiveUser()) {
-                                eventHandler.submit(() -> session.onConnect(user));
                                 retreiveContacts();
                             } else {
                                 session.onError(new WeChatException("failed to get user, try again later ..."));
                             }
                         } catch (IOException e) {
+                            e.printStackTrace();
                             disconnect();
                             eventHandler.submit(() -> session.onError(e));
                         }
@@ -436,9 +473,11 @@ public final class WeChatConnection {
                         deliverOutbox();
                         retrieveUpdates();
                     } catch (WeChatNotConnectedException e) {
+                        e.printStackTrace();
                         disconnect();
                         eventHandler.submit(() -> session.onDisconnect());
                     } catch (IOException e) {
+                        e.printStackTrace();
                         eventHandler.submit(() -> session.onError(e));
                     }
                 }

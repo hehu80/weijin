@@ -78,6 +78,7 @@ public class ChatWindow extends Application {
     private ListView<WeChatContact> contactsView;
     private ContextMenu contactsViewContextMenu;
     private ListView<WeChatMessage> messageView;
+    private ContextMenu messageViewContextMenu;
     private Label messageViewHeader;
     private TextField messageField;
     private WeChatSession session;
@@ -107,13 +108,16 @@ public class ChatWindow extends Application {
         messageViewHeader.setPadding(new Insets(5.0d));
         messageViewHeader.setAlignment(Pos.CENTER);
         messageViewHeader.setPrefWidth(Double.MAX_VALUE);
-        
+
         messageField = new TextField();
         messageField.setOnAction(onMessageInput);
 
         messageView = new ListView(new MessageListModel(session));
         messageView.setCellFactory(messageCellFactory);
         messageView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+        messageViewContextMenu = new ContextMenu();
+        messageViewContextMenu.getItems().addAll(createMenuItem("Show JSON", onMessageJSON));
 
         BorderPane messagePane = new BorderPane();
         messagePane.setTop(messageViewHeader);
@@ -125,14 +129,14 @@ public class ChatWindow extends Application {
         contactsView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         contactsView.getSelectionModel().selectedItemProperty().addListener(onContactSelected);
 
-        if (session.getSelectedChat() != null) {
-            contactsView.getSelectionModel().select(session.getSelectedChat());
-            contactsView.scrollTo(session.getSelectedChat());
-        }
-
         contactsViewContextMenu = new ContextMenu();
         contactsViewContextMenu.getItems().addAll(createMenuItem("Contact Details", onContactDetails));
         contactsViewContextMenu.getItems().addAll(createMenuItem("Show JSON", onContactJSON));
+
+        if (session.getUserActive() != null) {
+            contactsView.getSelectionModel().select(session.getUserActive());
+            contactsView.scrollTo(session.getUserActive());
+        }
 
         BorderPane rootPane = new BorderPane();
         rootPane.setLeft(contactsView);
@@ -150,16 +154,16 @@ public class ChatWindow extends Application {
 
         session.setOnSessionQRCodeReceived(onSessionQRCodeReceived);
         session.setOnSessionConnect(onSesssionConnect);
-        session.setOnSessionChatSelected(onSessionChatSelected);
+        session.setOnSessionUserActive(onSessionUserActive);
         session.connect();
     }
-    
-    private WeChatSession createSession(){
+
+    private WeChatSession createSession() {
         try {
             return loadSession(Paths.get(SESSION_FILE));
         } catch (IOException | ClassNotFoundException ignore) {
             return new WeChatSession();
-        }        
+        }
     }
 
     private MenuItem createMenuItem(String text, EventHandler<ActionEvent> eventHandler) {
@@ -192,7 +196,7 @@ public class ChatWindow extends Application {
         });
     };
 
-    private final WeChatSingleEventHandler<WeChatContact> onSessionChatSelected = (user) -> {
+    private final WeChatSingleEventHandler<WeChatContact> onSessionUserActive = (user) -> {
         Platform.runLater(() -> {
             if (user != contactsView.getSelectionModel().getSelectedItem()) {
                 contactsView.getSelectionModel().select(user);
@@ -215,8 +219,7 @@ public class ChatWindow extends Application {
 
     private final EventHandler<ActionEvent> onMessageInput = (event) -> {
         WeChatMessage message = new WeChatMessage();
-        message.setToUserName(contactsView.getSelectionModel().getSelectedItem());
-        message.setFromUserName(session.getLoginUser());
+        message.setToUser(contactsView.getSelectionModel().getSelectedItem());
         message.setContent(messageField.getText());
 
         try {
@@ -224,6 +227,11 @@ public class ChatWindow extends Application {
             messageField.setText("");
         } catch (WeChatException ignore) {
         }
+    };
+
+    private final EventHandler<ActionEvent> onMessageJSON = (event) -> {
+        WeChatMessage message = messageView.getSelectionModel().getSelectedItem();
+        createStage("JSON " + message.getContent(), new TextArea(message.getJson() != null ? message.getJson().replaceAll(",", "\n") : "not available")).show();
     };
 
     private final EventHandler<ActionEvent> onContactJSON = (event) -> {
@@ -269,7 +277,7 @@ public class ChatWindow extends Application {
     };
 
     private final ChangeListener<WeChatContact> onContactSelected = (observable, oldSelection, newSelection) -> {
-        session.selectChat(newSelection);
+        session.setUserActive(newSelection);
         messageView.setItems(new MessageListModel(session));
         messageViewHeader.setText(newSelection.getNickName());
     };
@@ -279,15 +287,19 @@ public class ChatWindow extends Application {
             @Override
             public void updateItem(WeChatContact contact, boolean empty) {
                 super.updateItem(contact, empty);
-                if (contact != null) {
-                    setText(contact.getNickName());
-                    setContextMenu(contactsViewContextMenu);
-
+                if (empty || contact == null) {
+                    setGraphic(null);
+                    setText(null);
+                    setContextMenu(null);
+                } else {
                     Image avatar = session.getMedia(contact);
                     ImageView avatarView = new ImageView(avatar == null ? ICON_AVATAR : avatar);
                     avatarView.setFitHeight(30.0d);
                     avatarView.setFitWidth(30.0d);
+
                     setGraphic(avatarView);
+                    setText(contact.getNickName());
+                    setContextMenu(contactsViewContextMenu);
                 }
             }
         };
@@ -323,8 +335,10 @@ public class ChatWindow extends Application {
             public void updateItem(WeChatMessage message, boolean empty) {
                 super.updateItem(message, empty);
 
-                if (empty) {
+                if (empty || message == null) {
                     setGraphic(null);
+                    setText(null);
+                    setContextMenu(null);
                 } else {
                     if (pane == null) {
                         createItem();
@@ -349,9 +363,14 @@ public class ChatWindow extends Application {
                         contentPane.setLeft(null);
                     }
 
-                    contentTime.setText(MESSAGE_TIME_FORMAT.format(message.getTime()));
+                    if (message.getTime() != null) {
+                        contentTime.setText(MESSAGE_TIME_FORMAT.format(message.getTime()));
+                    } else {
+                        // TODO hide
+                    }
                     contentLabel.setText(message.getContent());
                     setGraphic(pane);
+                    setContextMenu(messageViewContextMenu);
                 }
             }
         };

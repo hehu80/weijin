@@ -161,7 +161,7 @@ public class WeChatMediaCache {
      */
     public WeChatMediaCache downloadMedia(WeChatMessage message, boolean refresh, Runnable onDownloaded) {
         return downloadMedia(getMessageMediaId(message), refresh, true,
-                String.format(URL_MESSAGE_IMAGE_DOWNLOAD, message.getId(), session.getConnection().getSessionKey()),
+                String.format(URL_MESSAGE_IMAGE_DOWNLOAD, message.getMessageId(), session.getConnection().getSessionKey()),
                 onDownloaded);
     }
 
@@ -244,7 +244,7 @@ public class WeChatMediaCache {
      * @return
      */
     protected String getMessageMediaId(WeChatMessage message) {
-        return "media_" + message.getId();
+        return "media_" + message.getMessageId();
     }
 
     /**

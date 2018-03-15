@@ -39,7 +39,7 @@ public class ContactListModel extends ObservableListModel<WeChatContact> {
      * @param session
      */
     public ContactListModel(WeChatSession session) {
-        super(session.getContacts());
+        super(session.getContactsActive());
         this.session = session;
 
         this.session.setOnContactUpdated((contacts) -> {
@@ -48,13 +48,26 @@ public class ContactListModel extends ObservableListModel<WeChatContact> {
                 for (WeChatContact contact : contacts) {
                     int index = indexOf(contact);
                     if (index >= 0) {
-                        set(index, contact);
-                    } else {
+                        if (session.isContactActive(contact)) {
+                            set(index, contact);
+                        } else {
+                            remove(index);
+                        }
+                    } else if (session.isContactActive(contact)) {
                         add(contact);
                     }
                 }
                 endChange();
             });
         });
+
+//        this.session.addOnContactRemoved((contacts) -> {
+//            Platform.runLater(() -> {
+//                beginChange();
+//                System.out.println("remove " + contacts);
+//                removeAll(contacts);
+//                endChange();
+//            });
+//        });
     }
 }
