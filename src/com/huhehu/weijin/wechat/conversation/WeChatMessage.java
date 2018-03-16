@@ -55,6 +55,20 @@ public class WeChatMessage implements Serializable {
 
     /**
      *
+     */
+    public WeChatMessage() {
+    }
+
+    /**
+     *
+     * @param content
+     */
+    public WeChatMessage(String content) {
+        this.content = content;
+    }
+
+    /**
+     *
      * @param json
      * @return
      */

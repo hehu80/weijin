@@ -33,19 +33,17 @@ import javafx.application.Platform;
  */
 public class MessageListModel extends ObservableListModel<WeChatMessage> {
 
-    private WeChatSession session;
     private WeChatContact contact;
 
     /**
      *
      * @param session
      */
-    public MessageListModel(WeChatSession session) {
+    public MessageListModel(final WeChatSession session) {
         super(session.getMessages(session.getUserActive()));
-        this.session = session;
-        this.contact = session.getUserActive();
+        contact = session.getUserActive();
 
-        this.session.setOnMessageReceived((messages) -> {
+        session.setOnMessageReceived((messages) -> {
             Platform.runLater(() -> {
                 beginChange();
                 if (contact != null) {

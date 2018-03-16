@@ -32,28 +32,30 @@ import javafx.application.Platform;
  */
 public class ContactListModel extends ObservableListModel<WeChatContact> {
 
-    private WeChatSession session;
-
     /**
      *
      * @param session
      */
-    public ContactListModel(WeChatSession session) {
-        super(session.getContactsActive());
-        this.session = session;
+    public ContactListModel(final boolean active, final boolean saved, final WeChatSession session) {
+        super();
 
-        this.session.setOnContactUpdated((contacts) -> {
+        if (active) {
+            addAll(session.getContactsActive());
+        }
+        if (saved) {
+            addAll(session.getContactsSaved());
+        }
+
+        session.setOnContactUpdated((contacts) -> {
             Platform.runLater(() -> {
                 beginChange();
                 for (WeChatContact contact : contacts) {
                     int index = indexOf(contact);
                     if (index >= 0) {
-                        if (session.isContactActive(contact)) {
-                            set(index, contact);
-                        } else {
-                            remove(index);
-                        }
-                    } else if (session.isContactActive(contact)) {
+                        set(index, contact);
+                    } else if (active && session.isContactActive(contact)) {
+                        add(contact);
+                    } else if (saved && session.isContactSaved(contact)) {
                         add(contact);
                     }
                 }
@@ -61,13 +63,5 @@ public class ContactListModel extends ObservableListModel<WeChatContact> {
             });
         });
 
-//        this.session.addOnContactRemoved((contacts) -> {
-//            Platform.runLater(() -> {
-//                beginChange();
-//                System.out.println("remove " + contacts);
-//                removeAll(contacts);
-//                endChange();
-//            });
-//        });
     }
 }
