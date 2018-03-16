@@ -22,10 +22,9 @@
  */
 package com.huhehu.weijin.wechat.contacts;
 
-import com.huhehu.weijin.wechat.conversation.WeChatMessage;
-import org.json.JSONObject;
 import java.io.Serializable;
 import java.util.Objects;
+import org.json.JSONObject;
 
 /**
  *

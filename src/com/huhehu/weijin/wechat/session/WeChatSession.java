@@ -22,11 +22,8 @@
  */
 package com.huhehu.weijin.wechat.session;
 
-import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.WeChatNotConnectedException;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
-import com.huhehu.weijin.wechat.contacts.WeChatUser;
-import static com.huhehu.weijin.wechat.contacts.WeChatUser.USER_FILE_HELPER;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import com.huhehu.weijin.wechat.session.event.WeChatMultiEventHandler;
 import com.huhehu.weijin.wechat.session.event.WeChatSingleEventHandler;
@@ -39,11 +36,9 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.EventListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javafx.event.EventHandler;
 import javafx.scene.image.Image;
 
 /**

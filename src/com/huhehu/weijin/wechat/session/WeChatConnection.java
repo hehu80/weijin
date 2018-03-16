@@ -24,12 +24,13 @@ package com.huhehu.weijin.wechat.session;
 
 import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.WeChatNotConnectedException;
+import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
+import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
+import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import com.huhehu.weijin.wechat.contacts.WeChatUser;
 import com.huhehu.weijin.wechat.conversation.WeChatMessage;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import javax.net.ssl.HttpsURLConnection;
+import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
@@ -39,12 +40,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static com.huhehu.weijin.wechat.WeChatUtil.getStringFromInputStream;
-import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
-import static com.huhehu.weijin.wechat.WeChatUtil.getValueFromJavaScript;
-import com.huhehu.weijin.wechat.contacts.WeChatUser;
-import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
+import javax.net.ssl.HttpsURLConnection;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  *

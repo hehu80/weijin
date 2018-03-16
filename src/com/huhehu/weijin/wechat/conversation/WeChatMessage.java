@@ -24,8 +24,6 @@ package com.huhehu.weijin.wechat.conversation;
 
 import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
-import com.huhehu.weijin.wechat.contacts.WeChatUser;
-import com.huhehu.weijin.wechat.session.WeChatSession;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;

@@ -20,20 +20,42 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
  */
-package com.huhehu.weijin.wechat.session.event;
+package com.huhehu.weijin.ui;
 
-import java.util.EventListener;
+import static com.huhehu.weijin.ui.ChatWindow.ICON_AVATAR;
+import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import com.huhehu.weijin.wechat.session.WeChatSession;
+import javafx.scene.control.ListCell;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 /**
  *
  * @author Henning <henning@huhehu.com>
- * @param <T>
  */
-public interface WeChatSingleEventHandler<T> extends EventListener {
+public class ContactViewCell extends ListCell<WeChatContact> {
 
-    /**
-     *
-     * @param event
-     */
-    public void onWeChatEvent(T event);
+    private WeChatSession session;
+
+    public ContactViewCell(WeChatSession session) {
+        this.session = session;
+    }
+
+    @Override
+    public void updateItem(WeChatContact contact, boolean empty) {
+        super.updateItem(contact, empty);
+        if (empty || contact == null) {
+            setGraphic(null);
+            setText(null);
+            setContextMenu(null);
+        } else {
+            Image avatar = session.getMedia(contact);
+            ImageView avatarView = new ImageView(avatar == null ? ICON_AVATAR : avatar);
+            avatarView.setFitHeight(30.0d);
+            avatarView.setFitWidth(30.0d);
+
+            setGraphic(avatarView);
+            setText(contact.getNickName());
+        }
+    }
 }

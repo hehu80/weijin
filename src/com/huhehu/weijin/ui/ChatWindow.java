@@ -39,7 +39,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -49,7 +48,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
@@ -60,12 +58,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
-import javafx.util.Callback;
 
 /**
  *
@@ -80,7 +75,6 @@ public class ChatWindow extends Application {
 
     private ListView<WeChatContact> contactsViewSaved;
     private ListView<WeChatContact> contactsViewActive;
-    private ContextMenu contactsViewContextMenu;
     private Button contactsSavedSelectButton;
     private Button contactsActiveSelectButton;
     private BorderPane contactsPane;
@@ -146,7 +140,7 @@ public class ChatWindow extends Application {
         messageField.setOnAction((event) -> doSendMessage());
 
         messageView = new ListView(new MessageListModel(session));
-        messageView.setCellFactory(messageCellFactory);
+        messageView.setCellFactory((list) -> new MessageViewCell(session));
         messageView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         messageView.setContextMenu(new ContextMenu(
                 createMenuItem("Show JSON", (event) -> doShowMessageJSON(messageView.getSelectionModel().getSelectedItem()))
@@ -160,7 +154,7 @@ public class ChatWindow extends Application {
 
     private void createContactsPane() {
         contactsViewSaved = new ListView(new ContactListModel(false, true, session));
-        contactsViewSaved.setCellFactory(contactCellFactory);
+        contactsViewSaved.setCellFactory((list) -> new ContactViewCell(session));
         contactsViewSaved.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         contactsViewSaved.getSelectionModel().selectedItemProperty().addListener((observable, oldSelection, newSelection) -> doUserActive(newSelection));
         contactsViewSaved.setContextMenu(new ContextMenu(
@@ -169,7 +163,7 @@ public class ChatWindow extends Application {
         ));
 
         contactsViewActive = new ListView(new ContactListModel(true, false, session));
-        contactsViewActive.setCellFactory(contactCellFactory);
+        contactsViewActive.setCellFactory((list) -> new ContactViewCell(session));
         contactsViewActive.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         contactsViewActive.getSelectionModel().selectedItemProperty().addListener((observable, oldSelection, newSelection) -> doUserActive(newSelection));
         contactsViewActive.setContextMenu(new ContextMenu(
@@ -319,96 +313,4 @@ public class ChatWindow extends Application {
             createStage("Details of " + contact.getNickName(), rootPane).show();
         }
     }
-
-    private final Callback<ListView<WeChatContact>, ListCell<WeChatContact>> contactCellFactory = (list) -> {
-        return new ListCell<WeChatContact>() {
-            @Override
-            public void updateItem(WeChatContact contact, boolean empty) {
-                super.updateItem(contact, empty);
-                if (empty || contact == null) {
-                    setGraphic(null);
-                    setText(null);
-                    setContextMenu(null);
-                } else {
-                    Image avatar = session.getMedia(contact);
-                    ImageView avatarView = new ImageView(avatar == null ? ICON_AVATAR : avatar);
-                    avatarView.setFitHeight(30.0d);
-                    avatarView.setFitWidth(30.0d);
-
-                    setGraphic(avatarView);
-                    setText(contact.getNickName());
-                }
-            }
-        };
-    };
-
-    private final Callback<ListView<WeChatMessage>, ListCell<WeChatMessage>> messageCellFactory = (list) -> {
-        return new ListCell<WeChatMessage>() {
-            private BorderPane pane;
-            private BorderPane contentPane;
-            private Label contentLabel;
-            private Label contentTime;
-            private ImageView contentMedia;
-
-            private void createItem() {
-                contentLabel = new Label();
-                contentLabel.setStyle("-fx-text-fill:white;");
-
-                contentTime = new Label();
-                contentTime.setStyle("-fx-text-fill:lightgray;-fx-font-size: 9px;");
-
-                contentMedia = new ImageView();
-
-                contentPane = new BorderPane();
-                contentPane.setCenter(contentLabel);
-                contentPane.setBottom(contentTime);
-                contentPane.setPadding(new Insets(5.0d));
-                contentPane.setStyle("-fx-background-color:green;");
-
-                pane = new BorderPane();
-            }
-
-            @Override
-            public void updateItem(WeChatMessage message, boolean empty) {
-                super.updateItem(message, empty);
-
-                if (empty || message == null) {
-                    setGraphic(null);
-                    setText(null);
-                    setContextMenu(null);
-                } else {
-                    if (pane == null) {
-                        createItem();
-                    }
-
-                    if (message.isReceived()) {
-                        contentLabel.setTextAlignment(TextAlignment.LEFT);
-                        pane.setRight(null);
-                        pane.setLeft(contentPane);
-                    } else {
-                        contentLabel.setTextAlignment(TextAlignment.RIGHT);
-                        pane.setLeft(null);
-                        pane.setRight(contentPane);
-                    }
-
-                    Image media = session.getMedia(message);
-                    if (media != null) {
-                        contentMedia.setImage(media);
-                        contentPane.setLeft(null);
-                        contentPane.setLeft(contentMedia);
-                    } else {
-                        contentPane.setLeft(null);
-                    }
-
-                    if (message.getTime() != null) {
-                        contentTime.setText(MESSAGE_TIME_FORMAT.format(message.getTime()));
-                    } else {
-                        // TODO hide
-                    }
-                    contentLabel.setText(message.getContent());
-                    setGraphic(pane);
-                }
-            }
-        };
-    };
 }
