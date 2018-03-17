@@ -182,6 +182,7 @@ public class WeChatMediaCache {
 
                 if (useCache && !fromCache && Files.exists(mediaFile)) {
                     try {
+                        // TODO very bad code
                         BufferedImage bufferedImaged = ImageIO.read(mediaFile.toFile());
                         WritableImage image = new WritableImage(bufferedImaged.getWidth(), bufferedImaged.getHeight());
                         SwingFXUtils.toFXImage(bufferedImaged, image);
@@ -204,6 +205,7 @@ public class WeChatMediaCache {
                     }
 
                     try {
+                        // TODO very bad code
                         BufferedImage bufferedImaged = ImageIO.read(mediaFile.toFile());
                         WritableImage image = new WritableImage(bufferedImaged.getWidth(), bufferedImaged.getHeight());
                         SwingFXUtils.toFXImage(bufferedImaged, image);

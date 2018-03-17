@@ -52,49 +52,14 @@ public final class WeChatConnection {
 
     private static final String APP_ID = "wx782c26e4c19acffb";
 
-    /**
-     *
-     */
     protected static final String URL_QR_CODE_DOWNLOAD = "https://login.weixin.qq.com/qrcode/%s";
-
-    /**
-     *
-     */
     protected static final String URL_QR_CODE_REQUEST = "https://login.web2.wechat.com/jslogin?appid=%s&redirect_uri=https://web2.wechat.com/cgi-bin/mmwebwx-bin/webwxnewloginpage&fun=new&lang=de_&_=%s";
-
-    /**
-     *
-     */
     protected static final String URL_LOGIN_1 = "https://login.web2.wechat.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid=%s&tip=1&r=2145092312&_=1518273329652";
-
-    /**
-     *
-     */
     protected static final String URL_LOGIN_2 = "https://login.web.wechat.com/cgi-bin/mmwebwx-bin/login?loginicon=true&uuid=%s&tip=0&r=2145092312&_=1518273329652";
-
-    /**
-     *
-     */
     protected static final String URL_INIT = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxinit?r=1922173868&lang=de_&pass_ticket=%s";
-
-    /**
-     *
-     */
     protected static final String URL_SYNCHRONIZE = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxsync?sid=%s&skey=%s&pass_ticket=%s";
-
-    /**
-     *
-     */
     protected static final String URL_SEND_MESSAGE = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxsendmsg?lang=de_&pass_ticket=%s";
-
-    /**
-     *
-     */
     protected static final String URL_SYNCHRONIZE_CHECK = "https://webpush.web.wechat.com/cgi-bin/mmwebwx-bin/synccheck?r=1518496288126&skey=%s&sid=%s&uin=%s&deviceid=%s&synckey=%s&_=1518496248732";
-
-    /**
-     *
-     */
     protected static final String URL_CONTACT_LIST = "https://web.wechat.com/cgi-bin/mmwebwx-bin/webwxgetcontact?lang=de_&pass_ticket=%s&r=1518281986728&seq=0&skey=%s";
 
     static {

@@ -60,7 +60,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
 
 /**
  *
@@ -68,8 +67,8 @@ import javafx.stage.WindowEvent;
  */
 public class ChatWindow extends Application {
 
-    public static final Image ICON_WECHAT = new Image("file:wechat.png"); // TODO resource
-    public static final Image ICON_AVATAR = new Image("file:avatar.png"); // TODO resource
+    public static final Image ICON_WECHAT = new Image("com/huhehu/weijin/wechat.png");
+    public static final Image ICON_AVATAR = new Image("com/huhehu/weijin/avatar.png");
     public static final String SESSION_FILE = "session";
     public static final DateTimeFormatter MESSAGE_TIME_FORMAT = DateTimeFormatter.ofPattern("MM/dd HH:mm").withZone(ZoneOffset.systemDefault());
 
@@ -111,7 +110,7 @@ public class ChatWindow extends Application {
         rootPane.setLeft(contactsPane);
         rootPane.setCenter(messagePane);
 
-        mainStage.setOnCloseRequest(onStageClosed);
+        mainStage.setOnCloseRequest((event) -> doClose());
         mainStage.setTitle("WeiJin");
         mainStage.getIcons().add(ICON_WECHAT);
         mainStage.setScene(new Scene(rootPane, 800, 500));
@@ -119,14 +118,14 @@ public class ChatWindow extends Application {
 
         qrCodeView = new ImageView();
         qrCodeStage = createStage("Please scan QR-Code to login", new BorderPane(qrCodeView));
-        qrCodeStage.setOnCloseRequest(onStageClosed);
+        qrCodeStage.setOnCloseRequest((event) -> doClose());
 
         doUserActive(session.getUserActive());
 
         session.setOnSessionQRCodeReceived(onSessionQRCodeReceived);
         session.setOnSessionConnect(onSesssionConnect);
         session.setOnSessionUserActive(onSessionUserActive);
-        session.connect();
+      //  session.connect();
     }
 
     private void createMessagePane() {
@@ -179,6 +178,7 @@ public class ChatWindow extends Application {
         HBox contactsSelectionButtons = new HBox(contactsSavedSelectButton, contactsActiveSelectButton);
         contactsSelectionButtons.setPadding(new Insets(5.0d));
         contactsSelectionButtons.setSpacing(10.0d);
+        contactsSelectionButtons.setStyle("-fx-background-color:gray;");
 
         contactsPane = new BorderPane();
         contactsPane.setTop(contactsSelectionButtons);
@@ -229,7 +229,7 @@ public class ChatWindow extends Application {
         });
     };
 
-    private final EventHandler<WindowEvent> onStageClosed = (event) -> {
+    private void doClose() {
         qrCodeStage.hide();
         mainStage.hide();
         session.disconnect();
@@ -238,7 +238,7 @@ public class ChatWindow extends Application {
             saveSession(session, Paths.get(SESSION_FILE));
         } catch (IOException ignore) {
         }
-    };
+    }
 
     private void doSendMessage() {
         try {

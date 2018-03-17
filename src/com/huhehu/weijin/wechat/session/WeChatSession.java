@@ -280,7 +280,7 @@ public class WeChatSession implements Serializable {
         if (message.getToUser() == null) {
             message.setToUser(activeUser);
         }
-        
+
         message.setFromUser(loginUser);
         message.setTime(Instant.now());
         connection.sendMessage(message);
@@ -291,7 +291,6 @@ public class WeChatSession implements Serializable {
      * @param e
      */
     protected synchronized void onError(Exception e) {
-        e.printStackTrace();
         fireEvents(onSessionError, e);
     }
 
@@ -340,6 +339,10 @@ public class WeChatSession implements Serializable {
             newMessage.setFromUser(createOrGetSessionContact(newMessage.getFromUser()));
             newMessage.setReceived(loginUser.equals(newMessage.getToUser()));
 
+            if (newMessage.getTime() == null) {
+                newMessage.setTime(Instant.now());
+            }
+
             Contact sessionContact = (Contact) (newMessage.isReceived() ? newMessage.getFromUser() : newMessage.getToUser());
             if (!chats.containsKey(sessionContact)) {
                 chats.put(sessionContact, new ArrayList<>());
@@ -364,8 +367,8 @@ public class WeChatSession implements Serializable {
      * @param removedContacts
      */
     protected synchronized void onContactRemoved(WeChatContact... removedContacts) {
-//        // TODO
-//        fireEvents(onContactRemoved, removedContacts);
+        // TODO remove contacts implementation
+        // fireEvents(onContactRemoved, removedContacts);
     }
 
     /**

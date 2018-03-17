@@ -96,8 +96,9 @@ public class MessageViewCell extends ListCell<WeChatMessage> {
 
             if (message.getTime() != null) {
                 contentTime.setText(MESSAGE_TIME_FORMAT.format(message.getTime()));
+                contentPane.setBottom(contentTime);
             } else {
-                // TODO hide
+                contentPane.setBottom(null);
             }
             contentLabel.setText(message.getContent());
             setGraphic(pane);
