@@ -24,6 +24,7 @@ package com.huhehu.weijin.ui.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import javafx.application.Platform;
 import javafx.collections.ModifiableObservableListBase;
 
 /**
@@ -100,4 +101,7 @@ public class ObservableListModel<E> extends ModifiableObservableListBase<E> {
         return elements.remove(index);
     }
 
+    protected void doLater(Runnable later) {
+        Platform.runLater(later);
+    }
 }

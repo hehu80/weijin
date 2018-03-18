@@ -38,16 +38,53 @@ public class ObservableListModelNGTest {
 
     @Test
     public void test_constructor_list() {
-        ObservableListModel instance = new ObservableListModelImpl(Arrays.asList("a", "b"));
+        ObservableListModel instance = new ObservableListModelImpl("test1", "test2");
         assertEquals(instance.size(), 2);
-        assertEquals(instance.get(0), "a");
-        assertEquals(instance.get(1), "b");
+        assertEquals(instance.get(0), "test1");
+        assertEquals(instance.get(1), "test2");
+    }
+
+    @Test
+    public void test_constructor() {
+        ObservableListModel instance = new ObservableListModelImpl();
+        assertEquals(instance.size(), 0);
+    }
+
+    @Test
+    public void test_doAdd() {
+        ObservableListModel instance = new ObservableListModelImpl();
+        instance.doAdd(0, "test1");
+        assertEquals(instance.size(), 1);
+        assertEquals(instance.get(0), "test1");
+    }
+
+    @Test
+    public void test_doRemove() {
+        ObservableListModel instance = new ObservableListModelImpl("test1", "test2", "test3");
+        instance.doRemove(1);
+        assertEquals(instance.size(), 2);
+        assertEquals(instance.get(0), "test1");
+        assertEquals(instance.get(1), "test3");
+    }
+
+    @Test
+    public void test_doSet() {
+        ObservableListModel instance = new ObservableListModelImpl("test1", "test2", "test3");
+        instance.doSet(1, "test4");
+        assertEquals(instance.size(), 3);
+        assertEquals(instance.get(0), "test1");
+        assertEquals(instance.get(1), "test4");
+        assertEquals(instance.get(2), "test3");
     }
 
     public static class ObservableListModelImpl extends ObservableListModel<String> {
 
-        public ObservableListModelImpl(List<String> elements) {
-            super(elements);
+        public ObservableListModelImpl() {
+            super();
+        }
+
+        public ObservableListModelImpl(String... elements) {
+            super(Arrays.asList(elements));
         }
     }
 

@@ -44,12 +44,17 @@ public class MessageListModel extends ObservableListModel<WeChatMessage> {
         contact = session.getUserActive();
 
         session.setOnMessageReceived((messages) -> {
-            Platform.runLater(() -> {
+            doLater(() -> {
                 beginChange();
                 if (contact != null) {
                     for (WeChatMessage message : messages) {
-                        if(message.getToUser().equals(contact)  || message.getFromUser().equals(contact)){
-                            add(message);
+                        if (contact.equals(message.getToUser()) || contact.equals(message.getFromUser())) {
+                            int index = indexOf(message);
+                            if (index >= 0) {
+                                set(index, message);
+                            } else {
+                                add(message);
+                            }
                         }
                     }
                 }

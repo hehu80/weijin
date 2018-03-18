@@ -34,8 +34,4 @@ public class ChatWindowNGTest {
     public ChatWindowNGTest() {
     }
 
-    @Test
-    public void testSomeMethod() {
-    }
-    
 }

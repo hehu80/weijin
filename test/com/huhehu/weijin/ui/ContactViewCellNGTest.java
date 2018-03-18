@@ -33,9 +33,5 @@ public class ContactViewCellNGTest {
     
     public ContactViewCellNGTest() {
     }
-
-    @Test
-    public void testSomeMethod() {
-    }
     
 }

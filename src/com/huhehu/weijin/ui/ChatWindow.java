@@ -214,20 +214,20 @@ public class ChatWindow extends Application {
     }
 
     private final WeChatSingleEventHandler<Image> onSessionQRCodeReceived = (qrCode) -> {
-        Platform.runLater(() -> {
+        doLater(() -> {
             qrCodeView.setImage(qrCode);
             qrCodeStage.show();
         });
     };
 
     private final WeChatSingleEventHandler<WeChatContact> onSesssionConnect = (user) -> {
-        Platform.runLater(() -> {
+        doLater(() -> {
             qrCodeStage.hide();
         });
     };
 
     private final WeChatSingleEventHandler<WeChatContact> onSessionUserActive = (user) -> {
-        Platform.runLater(() -> {
+        doLater(() -> {
             doUserActive(user);
         });
     };
@@ -321,5 +321,9 @@ public class ChatWindow extends Application {
 
             createStage("Details of " + contact.getNickName(), rootPane).show();
         }
+    }
+    
+    protected void doLater(Runnable later){
+        Platform.runLater(later);
     }
 }

@@ -34,8 +34,5 @@ public class MessageViewCellNGTest {
     public MessageViewCellNGTest() {
     }
 
-    @Test
-    public void testSomeMethod() {
-    }
     
 }

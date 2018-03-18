@@ -47,7 +47,7 @@ public class ContactListModel extends ObservableListModel<WeChatContact> {
         }
 
         session.setOnContactUpdated((contacts) -> {
-            Platform.runLater(() -> {
+            doLater(() -> {
                 beginChange();
                 for (WeChatContact contact : contacts) {
                     int index = indexOf(contact);

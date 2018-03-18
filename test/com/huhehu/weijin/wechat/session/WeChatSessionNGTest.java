@@ -22,7 +22,9 @@
  */
 package com.huhehu.weijin.wechat.session;
 
-import static org.testng.Assert.*;
+import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import com.huhehu.weijin.wechat.session.WeChatSession.Contact;
+import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 
 /**
@@ -30,12 +32,31 @@ import org.testng.annotations.Test;
  * @author Henning <henning@huhehu.com>
  */
 public class WeChatSessionNGTest {
-    
+
     public WeChatSessionNGTest() {
     }
 
     @Test
-    public void testSomeMethod() {
+    public void test_contact_contstructor() {
+        WeChatContact contact = new WeChatContact("").setUin(123).setUserId("userId").setSeq("seq");
+        Contact instance1 = new Contact(contact);
+        assertEquals(instance1.getActualContact(), contact);
+        assertEquals(instance1.getUin(), 123);
+        assertEquals(instance1.getSeq(), "seq");
+        assertEquals(instance1.getUserId(), "userId");
     }
-    
+
+    @Test
+    public void test_contact_hashCode() {
+        WeChatContact contact = new WeChatContact("").setUin(123).setUserId("userId").setSeq("seq");
+        Contact instance1 = new Contact(contact);
+        assertEquals(instance1.hashCode(), contact.hashCode());
+    }
+
+    @Test
+    public void test_contact_toString() {
+        WeChatContact contact = new WeChatContact("").setUin(123).setUserId("userId").setSeq("seq");
+        Contact instance1 = new Contact(contact);
+        assertEquals(instance1.toString(), contact.toString());
+    }
 }
