@@ -266,7 +266,7 @@ public final class WeChatConnection {
         if (isConnected() && json.has("AddMsgList")) {
             for (int i = 0; i < json.getJSONArray("AddMsgList").length(); i++) {
                 WeChatMessage message = WeChatMessage.fromJson(json.getJSONArray("AddMsgList").getJSONObject(i));
-                if (message.getMsgType() == TYPE_CHAT_CHANGE) {
+                if (message.getMessageType() == TYPE_CHAT_CHANGE) {
                     WeChatContact contact = user.equals(message.getToUser()) ? message.getFromUser() : message.getToUser();
                     eventHandler.submit(() -> session.onUserActivate(contact));
                 } else {
@@ -275,7 +275,7 @@ public final class WeChatConnection {
             }
         }
 
-        if (isConnected() &&  json.has("MPSubscribeMsgList") && json.getJSONArray("MPSubscribeMsgList").length() > 0) {
+        if (isConnected() && json.has("MPSubscribeMsgList") && json.getJSONArray("MPSubscribeMsgList").length() > 0) {
             JSONObject articleList = json.getJSONArray("MPSubscribeMsgList").getJSONObject(0);
             WeChatUser articleListOwner = new WeChatUser(articleList.getString("UserName"));
             for (int i = 0; i < articleList.getJSONArray("MPArticleList").length(); i++) {
@@ -380,9 +380,9 @@ public final class WeChatConnection {
 
             HttpsURLConnection connection = openConnection(String.format(URL_SEND_MESSAGE, wxpassticket));
 
-            message.setId("" + System.currentTimeMillis());
+            message.setMessageId("" + System.currentTimeMillis());
             JSONObject json = new JSONObject();
-            json.put("Type", message.getMsgType() == 0 ? 1 : message.getMsgType());
+            json.put("Type", message.getMessageType() == 0 ? 1 : message.getMessageType());
             json.put("Content", message.getContent());
             json.put("FromUserName", user.getUserId());
             json.put("ToUserName", message.getToUser().getUserId());
@@ -438,7 +438,7 @@ public final class WeChatConnection {
                     } catch (WeChatNotConnectedException e) {
                         e.printStackTrace();
                         disconnect();
-                        eventHandler.submit(() -> session.onDisconnect());
+                        eventHandler.submit(session::onDisconnect);
                     } catch (IOException e) {
                         e.printStackTrace();
                         eventHandler.submit(() -> session.onError(e));

@@ -343,7 +343,8 @@ public class WeChatSession implements Serializable {
                 newMessage.setTime(Instant.now());
             }
 
-            Contact sessionContact = (Contact) (newMessage.isReceived() ? newMessage.getFromUser() : newMessage.getToUser());
+            Contact sessionContact = (Contact) (newMessage.isReceived() ? 
+                    newMessage.getFromUser() : newMessage.getToUser());
             if (!chats.containsKey(sessionContact)) {
                 chats.put(sessionContact, new ArrayList<>());
             }
@@ -485,7 +486,7 @@ public class WeChatSession implements Serializable {
         return contacts;
     }
 
-    private static class Contact extends WeChatContact {
+    protected static class Contact extends WeChatContact {
 
         private WeChatContact actualContact;
 

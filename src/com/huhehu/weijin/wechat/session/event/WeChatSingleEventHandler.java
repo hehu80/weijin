@@ -29,6 +29,7 @@ import java.util.EventListener;
  * @author Henning <henning@huhehu.com>
  * @param <T>
  */
+@FunctionalInterface
 public interface WeChatSingleEventHandler<T> extends EventListener {
 
     /**

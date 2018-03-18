@@ -20,64 +20,37 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
  */
-package com.huhehu.weijin.wechat.contacts;
+package com.huhehu.weijin.wechat;
+
+import org.json.JSONObject;
 
 /**
  *
  * @author Henning <henning@huhehu.com>
  */
-public class WeChatGroup extends WeChatContact {
+public class WeChatJsonException extends WeChatException {
 
-    private int memberCount;
-    private long ownerUin;
+    private JSONObject json;
 
-    /**
-     *
-     */
-    public WeChatGroup() {
+    public WeChatJsonException(String json) {
+        this(new JSONObject(json));
     }
 
-    /**
-     *
-     * @param userName
-     */
-    public WeChatGroup(String userName) {
-        super(userName);
+    public WeChatJsonException(JSONObject json) {
+        super("failed to parse object from JSON");
+        this.json = json;
     }
 
-    /**
-     *
-     * @return
-     */
-    public long getOwnerUin() {
-        return ownerUin;
+    public WeChatJsonException(String json, Throwable cause) {
+        this(new JSONObject(json), cause);
     }
 
-    /**
-     *
-     * @param ownerUin
-     * @return
-     */
-    public WeChatGroup setOwnerUin(long ownerUin) {
-        this.ownerUin = ownerUin;
-        return this;
+    public WeChatJsonException(JSONObject json, Throwable cause) {
+        super("failed to parse object from JSON", cause);
+        this.json = json;
     }
 
-    /**
-     *
-     * @return
-     */
-    public int getMemberCount() {
-        return memberCount;
-    }
-
-    /**
-     *
-     * @param memberCount
-     * @return
-     */
-    public WeChatGroup setMemberCount(int memberCount) {
-        this.memberCount = memberCount;
-        return this;
+    public JSONObject getJson() {
+        return json;
     }
 }

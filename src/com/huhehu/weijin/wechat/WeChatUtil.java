@@ -28,6 +28,7 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.net.URLConnection;
 import java.time.Instant;
+import org.json.JSONObject;
 
 /**
  *
@@ -38,13 +39,21 @@ public final class WeChatUtil {
     private WeChatUtil() {
     }
 
+    public static String prettyJson(String json) {
+        return prettyJson(new JSONObject(json));
+    }
+
+    public static String prettyJson(JSONObject json) {
+        return json.toString(4);
+    }
+
     /**
      *
      * @param time
      * @return
      */
     public static long getTimestamp(Instant time) {
-        return time.getEpochSecond() / (10l * 10l * 10l);
+        return time.getEpochSecond() * 1000l;
     }
 
     /**
@@ -53,7 +62,7 @@ public final class WeChatUtil {
      * @return
      */
     public static Instant getTimestamp(long time) {
-        return Instant.ofEpochMilli(time * (10l * 10l * 10l));
+        return Instant.ofEpochSecond(time / 1000l);
     }
 
     /**
@@ -117,6 +126,9 @@ public final class WeChatUtil {
                 return null;
             } else {
                 int firstValueEnd = javaScript.indexOf(";");
+                if (firstValueEnd < 0) {
+                    firstValueEnd = javaScript.length();
+                }
                 String firstValue = javaScript.substring(0, firstValueEnd).trim();
 
                 if (!firstValue.isEmpty() && firstValue.charAt(0) == '"') {

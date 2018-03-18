@@ -228,7 +228,7 @@ public class WeChatMediaCache {
      * @return
      */
     public boolean isMediaMessage(WeChatMessage message) {
-        return message != null && message.getMsgType() == TYPE_FILE;
+        return message != null && message.getMessageType() == TYPE_FILE;
     }
 
     /**

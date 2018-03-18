@@ -20,64 +20,35 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
  */
-package com.huhehu.weijin.wechat.contacts;
+package com.huhehu.weijin.ui.model;
+
+import java.util.Arrays;
+import java.util.List;
+import static org.testng.Assert.assertEquals;
+import org.testng.annotations.Test;
 
 /**
  *
  * @author Henning <henning@huhehu.com>
  */
-public class WeChatGroup extends WeChatContact {
+public class ObservableListModelNGTest {
 
-    private int memberCount;
-    private long ownerUin;
-
-    /**
-     *
-     */
-    public WeChatGroup() {
+    public ObservableListModelNGTest() {
     }
 
-    /**
-     *
-     * @param userName
-     */
-    public WeChatGroup(String userName) {
-        super(userName);
+    @Test
+    public void test_constructor_list() {
+        ObservableListModel instance = new ObservableListModelImpl(Arrays.asList("a", "b"));
+        assertEquals(instance.size(), 2);
+        assertEquals(instance.get(0), "a");
+        assertEquals(instance.get(1), "b");
     }
 
-    /**
-     *
-     * @return
-     */
-    public long getOwnerUin() {
-        return ownerUin;
+    public static class ObservableListModelImpl extends ObservableListModel<String> {
+
+        public ObservableListModelImpl(List<String> elements) {
+            super(elements);
+        }
     }
 
-    /**
-     *
-     * @param ownerUin
-     * @return
-     */
-    public WeChatGroup setOwnerUin(long ownerUin) {
-        this.ownerUin = ownerUin;
-        return this;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public int getMemberCount() {
-        return memberCount;
-    }
-
-    /**
-     *
-     * @param memberCount
-     * @return
-     */
-    public WeChatGroup setMemberCount(int memberCount) {
-        this.memberCount = memberCount;
-        return this;
-    }
 }

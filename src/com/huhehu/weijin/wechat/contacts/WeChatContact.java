@@ -22,6 +22,7 @@
  */
 package com.huhehu.weijin.wechat.contacts;
 
+import com.huhehu.weijin.wechat.WeChatJsonException;
 import java.io.Serializable;
 import java.util.Objects;
 import org.json.JSONObject;
@@ -48,7 +49,7 @@ public class WeChatContact implements Serializable {
     /**
      *
      */
-    public WeChatContact() {
+    protected WeChatContact() {
     }
 
     /**
@@ -64,32 +65,37 @@ public class WeChatContact implements Serializable {
      * @param json
      * @return
      */
-    public static WeChatContact fromJson(JSONObject json) {
-        WeChatContact contact;
-        if (json.getString("HeadImgUrl").contains("webwxgetheadimg")) {
-            WeChatGroup group = new WeChatGroup();
-            group.setMemberCount(json.getInt("MemberCount"));
-            group.setOwnerUin(json.getInt("OwnerUin"));
-            contact = group;
-        } else {
-            WeChatUser user = new WeChatUser();
-            user.setSex(json.getInt("Sex"));
-            user.setProvince(json.has("Province") ? json.getString("Province") : "");
-            user.setCity(json.has("City") ? json.getString("City") : "");
-            contact = user;
+    public static WeChatContact fromJson(JSONObject json) throws WeChatJsonException {
+        try {
+            WeChatContact contact;
+            if (json.getString("HeadImgUrl").contains("webwxgetheadimg")) {
+                WeChatGroup group = new WeChatGroup();
+                group.setMemberCount(json.getInt("MemberCount"));
+                group.setOwnerUin(json.getLong("OwnerUin"));
+                contact = group;
+            } else {
+                WeChatUser user = new WeChatUser();
+                user.setSex(json.getInt("Sex"));
+                user.setProvince(json.has("Province") ? json.getString("Province") : "");
+                user.setCity(json.has("City") ? json.getString("City") : "");
+                user.setAlias(json.getString("Alias"));
+                contact = user;
+            }
+            contact.setUin(json.getLong("Uin"));
+            contact.setUserId(json.getString("UserName"));
+            contact.setNickName(json.getString("NickName"));
+            contact.setImageUrl(json.getString("HeadImgUrl"));
+            contact.setContactFlag(json.getInt("ContactFlag"));
+            contact.setRemarkName(json.getString("RemarkName"));
+            contact.setSignature(json.getString("Signature"));
+            contact.setVerifyFlag(json.getInt("VerifyFlag"));
+            contact.setPinYinInitial(json.getString("PYInitial"));
+            contact.setPinYinQuanPin(json.getString("PYQuanPin"));
+            contact.setJson(json.toString());
+            return contact;
+        } catch (Exception e) {
+            throw new WeChatJsonException(json);
         }
-        contact.setUin(json.getLong("Uin"));
-        contact.setUserName(json.getString("UserName"));
-        contact.setNickName(json.getString("NickName"));
-        contact.setImageUrl(json.getString("HeadImgUrl"));
-        contact.setContactFlag(json.getInt("ContactFlag"));
-        contact.setRemarkName(json.getString("RemarkName"));
-        contact.setSignature(json.getString("Signature"));
-        contact.setVerifyFlag(json.getInt("VerifyFlag"));
-        contact.setPinYinInitial(json.getString("PYInitial"));
-        contact.setPinYinQuanPin(json.getString("PYQuanPin"));
-        contact.setJson(json.toString());
-        return contact;
     }
 
     /**
@@ -116,16 +122,6 @@ public class WeChatContact implements Serializable {
 
     public WeChatContact setUserId(String userId) {
         this.userId = userId;
-        return this;
-    }
-
-    /**
-     *
-     * @param userName
-     * @return
-     */
-    public WeChatContact setUserName(String userName) {
-        this.userId = userName;
         return this;
     }
 
@@ -162,13 +158,6 @@ public class WeChatContact implements Serializable {
      */
     public WeChatContact setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
-        if (imageUrl != null) {
-            int seqStart = imageUrl.indexOf("seq=") + 4;
-            int seqEnd = imageUrl.indexOf("&", seqStart);
-            setSeq(imageUrl.substring(seqStart, seqEnd));
-        } else {
-            setSeq(null);
-        }
         return this;
     }
 
@@ -285,6 +274,13 @@ public class WeChatContact implements Serializable {
      * @return
      */
     public String getSeq() {
+        if (seq == null && imageUrl != null) {
+            int seqStart = imageUrl.indexOf("seq=");
+            int seqEnd = imageUrl.indexOf("&", seqStart + 4);
+            if (seqStart >= 0) {
+                seq = imageUrl.substring(seqStart + 4, seqEnd >= seqStart ? seqEnd : imageUrl.length()).trim();
+            }
+        }
         return seq == null ? userId : seq;
     }
 

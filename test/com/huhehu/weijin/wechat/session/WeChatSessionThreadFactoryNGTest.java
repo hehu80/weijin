@@ -20,64 +20,24 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
  */
-package com.huhehu.weijin.wechat.contacts;
+package com.huhehu.weijin.wechat.session;
+
+import static org.testng.Assert.*;
+import org.testng.annotations.Test;
 
 /**
  *
  * @author Henning <henning@huhehu.com>
  */
-public class WeChatGroup extends WeChatContact {
-
-    private int memberCount;
-    private long ownerUin;
-
-    /**
-     *
-     */
-    public WeChatGroup() {
+public class WeChatSessionThreadFactoryNGTest {
+    
+    public WeChatSessionThreadFactoryNGTest() {
     }
 
-    /**
-     *
-     * @param userName
-     */
-    public WeChatGroup(String userName) {
-        super(userName);
+    @Test
+    public void test_constructor_string() {
+        WeChatSessionThreadFactory instance1 = new WeChatSessionThreadFactory("abctest");
+        assertTrue(instance1.newThread(() -> {}).getName().contains("abctest"));
     }
-
-    /**
-     *
-     * @return
-     */
-    public long getOwnerUin() {
-        return ownerUin;
-    }
-
-    /**
-     *
-     * @param ownerUin
-     * @return
-     */
-    public WeChatGroup setOwnerUin(long ownerUin) {
-        this.ownerUin = ownerUin;
-        return this;
-    }
-
-    /**
-     *
-     * @return
-     */
-    public int getMemberCount() {
-        return memberCount;
-    }
-
-    /**
-     *
-     * @param memberCount
-     * @return
-     */
-    public WeChatGroup setMemberCount(int memberCount) {
-        this.memberCount = memberCount;
-        return this;
-    }
+    
 }

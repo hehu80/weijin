@@ -60,6 +60,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.json.JSONObject;
+import static com.huhehu.weijin.wechat.WeChatUtil.prettyJson;
+import static com.huhehu.weijin.wechat.WeChatUtil.prettyJson;
 
 /**
  *
@@ -125,7 +128,7 @@ public class ChatWindow extends Application {
         session.setOnSessionQRCodeReceived(onSessionQRCodeReceived);
         session.setOnSessionConnect(onSesssionConnect);
         session.setOnSessionUserActive(onSessionUserActive);
-      //  session.connect();
+        session.connect();
     }
 
     private void createMessagePane() {
@@ -266,13 +269,19 @@ public class ChatWindow extends Application {
 
     private void doShowMessageJSON(WeChatMessage message) {
         if (message != null) {
-            createStage("JSON " + message.getContent(), new TextArea(message.getJson() != null ? message.getJson().replaceAll(",", "\n") : "not available")).show();
+            String json = message.getContent() == null
+                    ? "not available" : prettyJson(message.getContent());
+            createStage("JSON " + message.getContent(),
+                    new TextArea(json)).show();
         }
     }
 
     private void doShowContactJSON(WeChatContact contact) {
         if (contact != null) {
-            createStage("JSON " + contact.getNickName(), new TextArea(contact.getJson() != null ? contact.getJson().replaceAll(",", "\n") : "not available")).show();
+            String json = contact.getJson() == null
+                    ? "not available" : prettyJson(contact.getJson());
+            createStage("JSON " + contact.getNickName(),
+                    new TextArea(json)).show();
         }
     }
 

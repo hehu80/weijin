@@ -20,64 +20,45 @@
    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
    SOFTWARE.
  */
-package com.huhehu.weijin.wechat.contacts;
+package com.huhehu.weijin.wechat;
+
+import com.huhehu.weijin.wechat.contacts.WeChatUser;
+import org.json.JSONObject;
+import static org.testng.Assert.*;
+import org.testng.annotations.Test;
 
 /**
  *
  * @author Henning <henning@huhehu.com>
  */
-public class WeChatGroup extends WeChatContact {
+public class WeChatJsonExceptionNGTest {
 
-    private int memberCount;
-    private long ownerUin;
-
-    /**
-     *
-     */
-    public WeChatGroup() {
+    public WeChatJsonExceptionNGTest() {
     }
 
-    /**
-     *
-     * @param userName
-     */
-    public WeChatGroup(String userName) {
-        super(userName);
+    @Test
+    public void test_constructor_Json() {
+        JSONObject json = new JSONObject();
+        assertEquals(json, new WeChatJsonException(json).getJson());
     }
 
-    /**
-     *
-     * @return
-     */
-    public long getOwnerUin() {
-        return ownerUin;
+    @Test
+    public void test_constructor_Json_Cause() {
+        JSONObject json = new JSONObject();
+        assertEquals(json, new WeChatJsonException(json, new Exception()).getJson());
     }
 
-    /**
-     *
-     * @param ownerUin
-     * @return
-     */
-    public WeChatGroup setOwnerUin(long ownerUin) {
-        this.ownerUin = ownerUin;
-        return this;
+    @Test
+    public void test_constructor_JsonString() {
+        JSONObject json = new JSONObject();
+        json.put("test", 123);
+        assertEquals(json.toString(), new WeChatJsonException(json.toString()).getJson().toString());
     }
 
-    /**
-     *
-     * @return
-     */
-    public int getMemberCount() {
-        return memberCount;
-    }
-
-    /**
-     *
-     * @param memberCount
-     * @return
-     */
-    public WeChatGroup setMemberCount(int memberCount) {
-        this.memberCount = memberCount;
-        return this;
+    @Test
+    public void test_constructor_JsonString_Cause() {
+        JSONObject json = new JSONObject();
+        json.put("test", 123);
+        assertEquals(json.toString(), new WeChatJsonException(json.toString(), new Exception()).getJson().toString());
     }
 }

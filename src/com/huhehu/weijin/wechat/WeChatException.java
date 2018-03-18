@@ -32,9 +32,13 @@ public class WeChatException extends IOException {
 
     /**
      *
-     * @param reason
+     * @param message
      */
-    public WeChatException(String reason) {
-        super(reason);
+    public WeChatException(String message) {
+        super(message);
+    }
+
+    public WeChatException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
