@@ -48,7 +48,7 @@ import javafx.scene.image.Image;
 public class WeChatSession implements Serializable {
 
     private transient WeChatConnection connection;
-    private transient WeChatMediaCache mediaCache = new WeChatMediaCache(this);
+    private transient WeChatMediaCache mediaCache;
     private List<Contact> contactsSession = new ArrayList<>(); // all the contacts
     private List<Contact> contactsSaved = new ArrayList<>(); // contacts stored by user
     private List<Contact> contactsActive = new ArrayList<>(); // contacts with active chats
@@ -66,10 +66,15 @@ public class WeChatSession implements Serializable {
     private transient WeChatSingleEventHandler<WeChatContact> onSessionDisconnect;
     private transient WeChatSingleEventHandler<WeChatContact> onSessionUserActive;
 
+    public WeChatSession(){
+        mediaCache = createMediaCache();
+        mediaCache.loadAll(); // just start loading all files directly again
+    }
+    
     private void readObject(ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
         inputStream.defaultReadObject();
 
-        mediaCache = new WeChatMediaCache(this);
+        mediaCache = createMediaCache();
         mediaCache.loadAll(); // just start loading all files directly again
     }
 
@@ -105,6 +110,14 @@ public class WeChatSession implements Serializable {
     }
 
     /**
+     * 
+     * @return 
+     */
+    protected WeChatMediaCache createMediaCache(){
+        return new WeChatMediaCache(this);
+    }
+    
+    /**
      *
      * @return
      */
@@ -129,6 +142,14 @@ public class WeChatSession implements Serializable {
     public Image getMedia(WeChatMessage message) {
         return message == null || mediaCache == null ? null : mediaCache.getMedia(message);
     }
+    
+    /**
+     * 
+     * @return 
+     */
+    protected WeChatConnection createConnection(){
+        return new WeChatConnection(this);
+    }
 
     /**
      *
@@ -151,7 +172,7 @@ public class WeChatSession implements Serializable {
      */
     public void connect() {
         if (connection == null) {
-            connection = new WeChatConnection(this);
+            connection = createConnection();
         }
     }
 

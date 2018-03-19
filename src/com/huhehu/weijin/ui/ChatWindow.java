@@ -60,8 +60,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.json.JSONObject;
-import static com.huhehu.weijin.wechat.WeChatUtil.prettyJson;
 import static com.huhehu.weijin.wechat.WeChatUtil.prettyJson;
 
 /**
@@ -111,8 +109,8 @@ public class ChatWindow extends Application {
 
         BorderPane rootPane = new BorderPane();
         rootPane.setLeft(contactsPane);
-        rootPane.setCenter(messagePane);
-
+        rootPane.setCenter(messagePane); 
+        
         mainStage.setOnCloseRequest((event) -> doClose());
         mainStage.setTitle("WeiJin");
         mainStage.getIcons().add(ICON_WECHAT);

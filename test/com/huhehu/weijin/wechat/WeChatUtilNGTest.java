@@ -89,13 +89,13 @@ public class WeChatUtilNGTest {
 
     @Test
     public void test_getStringFromInputStream_URLConnection() throws IOException {
-        URLConnection connection = new URLConnectionImpl("test");
+        URLConnection connection = new DummyUrlConnection("test");
         assertEquals("test", getStringFromInputStream(connection, "UTF-8"));
     }
 
     @Test
     public void test_getStringFromInputStream_String() throws IOException {
-        InputStream inputStream = new URLConnectionImpl("test").getInputStream();
+        InputStream inputStream = new DummyUrlConnection("test").getInputStream();
         assertEquals("test", getStringFromInputStream(inputStream, "UTF-8"));
     }
 
@@ -131,28 +131,28 @@ public class WeChatUtilNGTest {
 
     @Test
     public void test_getValueFromJavaScript_URLConnection_notFound() throws IOException {
-        URLConnection javaScript = new URLConnectionImpl("a=1;b=2;c=3");
+        URLConnection javaScript = new DummyUrlConnection("a=1;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "d", "UTF-8"), null);
 
-        javaScript = new URLConnectionImpl("a=1;b=2;c   =   3  ");
+        javaScript = new DummyUrlConnection("a=1;b=2;c   =   3  ");
         assertEquals(getValueFromJavaScript(javaScript, "d", "UTF-8"), null);
 
-        javaScript = new URLConnectionImpl("a=1;   b=    2   ;c=3");
+        javaScript = new DummyUrlConnection("a=1;   b=    2   ;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "d", "UTF-8"), null);
 
-        javaScript = new URLConnectionImpl("a=1;b=2;c=3");
+        javaScript = new DummyUrlConnection("a=1;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "d", "UTF-8"), null);
 
-        javaScript = new URLConnectionImpl("a   =1   ;b=2;c=3");
+        javaScript = new DummyUrlConnection("a   =1   ;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "d", "UTF-8"), null);
 
-        javaScript = new URLConnectionImpl("a=1;b=2;c=3");
+        javaScript = new DummyUrlConnection("a=1;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "d", "UTF-8"), null);
 
-        javaScript = new URLConnectionImpl("");
+        javaScript = new DummyUrlConnection("");
         assertEquals(getValueFromJavaScript(javaScript, "d", "UTF-8"), null);
 
-        javaScript = new URLConnectionImpl("=");
+        javaScript = new DummyUrlConnection("=");
         assertEquals(getValueFromJavaScript(javaScript, "d", "UTF-8"), null);
     }
 
@@ -188,39 +188,39 @@ public class WeChatUtilNGTest {
 
     @Test
     public void test_getValueFromJavaScript_URLConnection_Found() throws IOException {
-        URLConnection javaScript = new URLConnectionImpl("a=1;b=2;c=3");
+        URLConnection javaScript = new DummyUrlConnection("a=1;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "c", "UTF-8"), "3");
 
-        javaScript = new URLConnectionImpl("a=1;b=2;c   =   3  ");
+        javaScript = new DummyUrlConnection("a=1;b=2;c   =   3  ");
         assertEquals(getValueFromJavaScript(javaScript, "c", "UTF-8"), "3");
 
-        javaScript = new URLConnectionImpl("a=1;   b=    2   ;c=3");
+        javaScript = new DummyUrlConnection("a=1;   b=    2   ;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "b", "UTF-8"), "2");
 
-        javaScript = new URLConnectionImpl("a=1;b=2;c=3");
+        javaScript = new DummyUrlConnection("a=1;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "b", "UTF-8"), "2");
 
-        javaScript = new URLConnectionImpl("a   =1   ;b=2;c=3");
+        javaScript = new DummyUrlConnection("a   =1   ;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "a", "UTF-8"), "1");
 
-        javaScript = new URLConnectionImpl("a   =\"1\"   ;b=2;c=3");
+        javaScript = new DummyUrlConnection("a   =\"1\"   ;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "a", "UTF-8"), "1");
 
-        javaScript = new URLConnectionImpl("a   =\"1   \";b=2;c=3");
+        javaScript = new DummyUrlConnection("a   =\"1   \";b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "a", "UTF-8"), "1   ");
 
-        javaScript = new URLConnectionImpl("a=1;b=2;c=3");
+        javaScript = new DummyUrlConnection("a=1;b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "a", "UTF-8"), "1");
 
-        javaScript = new URLConnectionImpl("a=\"1\";b=2;c=3");
+        javaScript = new DummyUrlConnection("a=\"1\";b=2;c=3");
         assertEquals(getValueFromJavaScript(javaScript, "a", "UTF-8"), "1");
     }
 
-    public static class URLConnectionImpl extends URLConnection {
+    public static class DummyUrlConnection extends URLConnection {
 
         private InputStream inputStream;
 
-        public URLConnectionImpl(String content) {
+        public DummyUrlConnection(String content) {
             super(null);
             inputStream = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
         }
@@ -236,6 +236,4 @@ public class WeChatUtilNGTest {
         }
     }
 
-//    public static String getValueFromJavaScript(URLConnection connection, String key, String charsetName)
-//    public static String getValueFromJavaScript(String javaScript, String key)
 }

@@ -69,8 +69,16 @@ public class WeChatMediaCache {
     protected WeChatMediaCache(WeChatSession session) {
         this.session = session;
 
-        mediaDownloader = Executors.newFixedThreadPool(16, new WeChatSessionThreadFactory("WeChat-Media"));
+        mediaDownloader = createMediaDownloader();
         loadAll();
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    protected ExecutorService createMediaDownloader() {
+        return Executors.newFixedThreadPool(16, new WeChatSessionThreadFactory("WeChat-Media"));
     }
 
     /**
