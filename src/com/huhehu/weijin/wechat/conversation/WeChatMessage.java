@@ -22,6 +22,7 @@
  */
 package com.huhehu.weijin.wechat.conversation;
 
+import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.WeChatJsonException;
 import static com.huhehu.weijin.wechat.WeChatUtil.getTimestamp;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
@@ -73,13 +74,17 @@ public class WeChatMessage implements Serializable {
      */
     public static WeChatMessage fromJson(JSONObject json) throws WeChatJsonException {
         try {
+            if (!json.has("MsgId")) {
+                throw new WeChatException("MsgId required but not found!");
+            }
+
             WeChatMessage message = new WeChatMessage();
             message.setMessageId(json.getString("MsgId"));
-            message.setContent(json.getString("Content"));
-            message.setFromUser(new WeChatContact(json.getString("FromUserName")));
-            message.setToUser(new WeChatContact(json.getString("ToUserName")));
-            message.setMessageType(json.getInt("MsgType"));
-            message.setTime(getTimestamp(json.getLong("CreateTime")));
+            message.setContent(json.has("Content") ? json.getString("Content") : "");
+            message.setFromUser(json.has("FromUserName") ? new WeChatContact(json.getString("FromUserName")) : null);
+            message.setToUser(json.has("ToUserName") ? new WeChatContact(json.getString("ToUserName")) : null);
+            message.setMessageType(json.has("MsgType") ? json.getInt("MsgType") : 0);
+            message.setTime(json.has("CreateTime") ? getTimestamp(json.getLong("CreateTime")) : null);
             message.setJson(json.toString());
             return message;
         } catch (Exception e) {

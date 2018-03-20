@@ -173,6 +173,7 @@ public class WeChatSession implements Serializable {
     public void connect() {
         if (connection == null) {
             connection = createConnection();
+            connection.startSynchronize();
         }
     }
 
@@ -181,7 +182,7 @@ public class WeChatSession implements Serializable {
      */
     public void disconnect() {
         if (connection != null) {
-            connection.shutdownNow();
+            connection.stopSynchronize();
             connection = null;
         }
 

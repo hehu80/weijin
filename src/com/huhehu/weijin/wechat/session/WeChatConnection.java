@@ -33,7 +33,6 @@ import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import static com.huhehu.weijin.wechat.conversation.WeChatMessage.TYPE_CHAT_CHANGE;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,7 +79,7 @@ public class WeChatConnection {
     private WeChatSession session;
     private List<WeChatMessage> outbox = new ArrayList<>();
     private ExecutorService eventExecutor;
-    private ExecutorService updateExecutor;
+    private ExecutorService synchronizeExecutor;
     private boolean stop;
 
     /**
@@ -89,10 +88,6 @@ public class WeChatConnection {
      */
     protected WeChatConnection(WeChatSession session) {
         this.session = session;
-
-        eventExecutor = createEventExecutor();
-        updateExecutor = createUpdateExecutor();
-        updateExecutor.submit(new UpdateRunnable());
     }
 
     /**
@@ -116,7 +111,7 @@ public class WeChatConnection {
      * @return
      */
     protected ExecutorService createUpdateExecutor() {
-        return Executors.newSingleThreadExecutor(new WeChatSessionThreadFactory("WeChat-Update"));
+        return Executors.newSingleThreadExecutor(new WeChatSessionThreadFactory("WeChat-Event"));
     }
 
     /**
@@ -161,15 +156,6 @@ public class WeChatConnection {
         wxcookies = null;
         wxsynckey = null;
         outbox.clear();
-    }
-
-    /**
-     *
-     */
-    protected synchronized void shutdownNow() {
-        stop = true;
-        updateExecutor.shutdownNow();
-        eventExecutor.shutdownNow();
     }
 
     /**
@@ -261,7 +247,6 @@ public class WeChatConnection {
         // TODO     System.out.println(s);
         // TODO }
         // TODO }
-        
         if (json.has("BaseResponse")) {
             int result = json.getJSONObject("BaseResponse").getInt("Ret");
             if (1101 == result) {
@@ -440,45 +425,64 @@ public class WeChatConnection {
         }
     }
 
-    private class UpdateRunnable implements Runnable {
+    /**
+     * 
+     */
+    protected synchronized void startSynchronize() {
+        stop = false;
+        eventExecutor = createEventExecutor();
+        synchronizeExecutor = createUpdateExecutor();
+        synchronizeExecutor.submit(() -> synchronize());
+    }
 
-        public void run() {
-            while (!stop) {
-                if (!isConnected()) {
-                    if (wxuuid == null) {
-                        try {
-                            if (retrieveUserId()) {
-                                session.onQRCodeReceived(String.format(URL_QR_CODE_DOWNLOAD, wxuuid));
-                            } else {
-                                session.onError(new WeChatException("failed to get QR code, try again later ..."));
-                            }
-                        } catch (IOException e) {
-                            disconnect();
-                            eventExecutor.submit(() -> session.onError(e));
-                        }
-                    }
-                    if (wxuuid != null) {
-                        try {
-                            if (retreiveUser()) {
-                                retreiveContacts();
-                            } else {
-                                session.onError(new WeChatException("failed to get user, try again later ..."));
-                            }
-                        } catch (IOException e) {
-                            disconnect();
-                            eventExecutor.submit(() -> session.onError(e));
-                        }
-                    }
-                } else {
+    /**
+     * 
+     */
+    protected synchronized void stopSynchronize() {
+        stop = true;
+        synchronizeExecutor.shutdownNow();
+        eventExecutor.shutdownNow();
+    }
+
+    /**
+     *
+     */
+    private void synchronize() {
+        while (!stop) {
+            if (!isConnected()) {
+                if (wxuuid == null) {
                     try {
-                        deliverOutbox();
-                        retrieveUpdates();
-                    } catch (WeChatNotConnectedException e) {
-                        disconnect();
-                        eventExecutor.submit(session::onDisconnect);
+                        if (retrieveUserId()) {
+                            session.onQRCodeReceived(String.format(URL_QR_CODE_DOWNLOAD, wxuuid));
+                        } else {
+                            session.onError(new WeChatException("failed to get QR code, try again later ..."));
+                        }
                     } catch (IOException e) {
+                        disconnect();
                         eventExecutor.submit(() -> session.onError(e));
                     }
+                }
+                if (wxuuid != null) {
+                    try {
+                        if (retreiveUser()) {
+                            retreiveContacts();
+                        } else {
+                            session.onError(new WeChatException("failed to get user, try again later ..."));
+                        }
+                    } catch (IOException e) {
+                        disconnect();
+                        eventExecutor.submit(() -> session.onError(e));
+                    }
+                }
+            } else {
+                try {
+                    deliverOutbox();
+                    retrieveUpdates();
+                } catch (WeChatNotConnectedException e) {
+                    disconnect();
+                    eventExecutor.submit(session::onDisconnect);
+                } catch (IOException e) {
+                    eventExecutor.submit(() -> session.onError(e));
                 }
             }
         }

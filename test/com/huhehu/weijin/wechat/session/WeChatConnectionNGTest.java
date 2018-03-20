@@ -22,13 +22,17 @@
  */
 package com.huhehu.weijin.wechat.session;
 
+import com.huhehu.weijin.wechat.WeChatNotConnectedException;
 import com.huhehu.weijin.wechat.contacts.WeChatContact;
+import com.huhehu.weijin.wechat.contacts.WeChatUser;
+import com.huhehu.weijin.wechat.conversation.WeChatMessage;
 import static com.huhehu.weijin.wechat.session.WeChatConnection.APP_ID;
 import static com.huhehu.weijin.wechat.session.WeChatConnection.URL_CONTACT_LIST;
 import static com.huhehu.weijin.wechat.session.WeChatConnection.URL_INIT;
 import static com.huhehu.weijin.wechat.session.WeChatConnection.URL_LOGIN_1;
 import static com.huhehu.weijin.wechat.session.WeChatConnection.URL_LOGIN_2;
 import static com.huhehu.weijin.wechat.session.WeChatConnection.URL_QR_CODE_REQUEST;
+import static com.huhehu.weijin.wechat.session.WeChatConnection.URL_SEND_MESSAGE;
 import static com.huhehu.weijin.wechat.session.WeChatConnection.URL_SYNCHRONIZE;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,6 +43,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -70,16 +75,64 @@ public class WeChatConnectionNGTest {
 
     @Test
     public void test_setConnectTimeout() throws IOException {
-        WeChatConnectionImpl testConnection = new WeChatConnectionImpl();
+        WeChatConnectionImpl testConnection = new WeChatConnectionImpl(null);
         testConnection.setConnectTimeout(123);
         assertEquals(testConnection.openConnection(URL_INIT).getConnectTimeout(), 123);
     }
 
     @Test
     public void test_setreadTimeout() throws IOException {
-        WeChatConnectionImpl testConnection = new WeChatConnectionImpl();
+        WeChatConnectionImpl testConnection = new WeChatConnectionImpl(null);
         testConnection.setReadTimeout(123);
         assertEquals(testConnection.openConnection(URL_INIT).getReadTimeout(), 123);
+    }
+
+    @Test
+    public void test_send_messages() throws MalformedURLException, WeChatNotConnectedException {
+        WeChatSessionImpl testSession = new WeChatSessionImpl();
+        testSession.addConnection().request(String.format(URL_QR_CODE_REQUEST, APP_ID))
+                .response("window.QRLogin.uuid=test");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=201");
+        testSession.addConnection().request(String.format(URL_LOGIN_2, "test"))
+                .response("window.redirect_uri=http://localhost");
+        testSession.addConnection().request(String.format("http://localhost&fun=new&version=v2&lang=de_"))
+                .response("<skey>testskey</skey><wxsid>testwxsid</wxsid><wxuin>testwxuin</wxuin><pass_ticket>testpassticket</pass_ticket>")
+                .requestCookie("test", "test");
+        testSession.addConnection().request(String.format(URL_INIT, "testpassticket"))
+                .requestJson("\\{\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\}\\}")
+                .response("{User: {HeadImgUrl:\"\", UserName:\"testuser\"}}");
+        testSession.addConnection().request(String.format(URL_CONTACT_LIST, "testpassticket", "testskey"))
+                .response("{SyncKey: {List: []}, MemberList: []}")
+                .responseCookie("last_wxuin", "testwxuin")
+                .responseCookie("login_frequency", "1")
+                .responseCookie("test", "test");
+        testSession.addConnection().request(String.format(URL_SYNCHRONIZE, "testwxsid", "testskey", "testpassticket"))
+                .requestJson("\\{\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\},\"SyncKey\":\\{\"List\":\\[\\],\"Count\":0\\}\\}")
+                .response("{SyncKey: {List: []}, MemberList: []}")
+                .responseCookie("last_wxuin", "testwxuin")
+                .responseCookie("login_frequency", "1")
+                .responseCookie("test", "test");
+
+        testSession.setOnSessionDisconnect((u) -> fail("session disconnect not expected"));
+        testSession.setOnSessionError((e) -> fail("session error not expected"));
+        testSession.connect();
+
+        testSession.addConnection().request(String.format(URL_SEND_MESSAGE, "testpassticket"))
+                .requestJson("\\{\"Msg\":\\{\"ClientMsgId\":\"\\d+\",\"Type\":1,\"LocalID\":\"\\d+\",\"Content\":\"content\",\"CreateTime\":\\d+,\"FromUserName\":\"testuser\",\"ToUserName\":\"test1\"\\},\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\}\\}")
+                .response("{SyncKey: {List: []}, MemberList: []}")
+                .responseCookie("last_wxuin", "testwxuin")
+                .responseCookie("login_frequency", "1")
+                .responseCookie("test", "test");
+        testSession.addConnection().request(String.format(URL_SYNCHRONIZE, "testwxsid", "testskey", "testpassticket"))
+                .requestJson("\\{\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\},\"SyncKey\":\\{\"List\":\\[\\],\"Count\":0\\}\\}")
+                .response("{SyncKey: {List: []}, MemberList: []}")
+                .responseCookie("last_wxuin", "testwxuin")
+                .responseCookie("login_frequency", "1")
+                .responseCookie("test", "test");
+
+        testSession.getConnection().sendMessage(new WeChatMessage("content").setTime(Instant.now()).setToUser(new WeChatUser("test1")));
+        testSession.getConnection().startSynchronize();
     }
 
     @Test
@@ -305,17 +358,9 @@ public class WeChatConnectionNGTest {
     public static class WeChatConnectionImpl extends WeChatConnection {
 
         private int requestsPassed;
-        private MockedExecutorService updateExecutor;
-        private MockedExecutorService eventExecutor;
 
         public WeChatConnectionImpl(WeChatSessionImpl session) {
             super(session);
-            eventExecutor.setExecute(true);
-            updateExecutor.setExecute(true);
-        }
-
-        public WeChatConnectionImpl() {
-            super(null);
         }
 
         private List<MockedUrlConnection> getSessionConnections() {
@@ -338,7 +383,7 @@ public class WeChatConnectionNGTest {
                 }
 
                 if (getSessionConnections().isEmpty()) {
-                    shutdownNow(); // CAUTION: stop connection after last URL request (otherwise it will never stop)
+                    stopSynchronize(); // CAUTION: stop connection after last URL request (otherwise it will never stop)
                 }
 
                 return connection;
@@ -349,12 +394,12 @@ public class WeChatConnectionNGTest {
 
         @Override
         protected ExecutorService createUpdateExecutor() {
-            return updateExecutor = new MockedExecutorService(false);
+            return new MockedExecutorService(true);
         }
 
         @Override
         protected ExecutorService createEventExecutor() {
-            return eventExecutor = new MockedExecutorService(false);
+            return new MockedExecutorService(true);
         }
 
     }

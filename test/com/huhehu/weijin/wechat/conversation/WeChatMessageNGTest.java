@@ -162,12 +162,24 @@ public class WeChatMessageNGTest {
     }
 
     @Test
-    public void test_fromInvalidJson() {
+    public void test_fromValidButEmptyJson() {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("MsgId", "messageId");
+            WeChatMessage instance1 = WeChatMessage.fromJson(json);
+            assertEquals(instance1.getMessageId(), "messageId");
+        } catch (WeChatJsonException e) {
+            fail("shouldn't throw exception with valid JSON", e);
+        }
+    }
+
+    @Test
+    public void test_fromInvalidJson_noMessageId() {
         try {
             long time = getTimestamp(Instant.now());
             JSONObject json = getValidJson(time);
-            json.remove("MsgType");
-            WeChatMessage.fromJson(json);
+            json.remove("MsgId");
+            WeChatContact.fromJson(json);
             fail("should throw exception with invalid JSON");
         } catch (WeChatJsonException e) {
         }
