@@ -61,10 +61,10 @@ public class WeChatMessage implements Serializable {
 
     /**
      *
-     * @param content
+     * @param messageId
      */
-    public WeChatMessage(String content) {
-        this.content = content;
+    public WeChatMessage(String messageId) {
+        this.messageId = messageId;
     }
 
     /**
@@ -256,7 +256,7 @@ public class WeChatMessage implements Serializable {
         } else if (!(obj instanceof WeChatMessage)) {
             return false;
         } else {
-            return messageId != null && messageId.equals(((WeChatMessage) obj).messageId);
+            return Objects.equals(messageId, ((WeChatMessage) obj).messageId);
         }
     }
 }

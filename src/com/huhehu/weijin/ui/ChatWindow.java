@@ -243,7 +243,7 @@ public class ChatWindow extends Application {
 
     private void doSendMessage() {
         try {
-            session.sendMessage(new WeChatMessage(messageField.getText()));
+            session.sendMessage(new WeChatMessage().setContent(messageField.getText()));
             messageField.setText("");
         } catch (WeChatException ignore) {
         }

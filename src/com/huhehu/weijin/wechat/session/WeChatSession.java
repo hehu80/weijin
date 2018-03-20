@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javafx.scene.image.Image;
 
 /**
@@ -554,9 +555,9 @@ public class WeChatSession implements Serializable {
                 return actualContact.equals(obj);
             } else if (getUin() != 0 && getUin() == ((Contact) obj).getUin()) {
                 return true;
-            } else if (getUserId() != null && getUserId().equals(((Contact) obj).getUserId())) {
+            } else if (Objects.equals(getUserId(), ((Contact) obj).getUserId())) {
                 return true;
-            } else if (getSeq() != null && getSeq().equals(((Contact) obj).getSeq())) {
+            } else if (Objects.equals(getSeq(), ((Contact) obj).getSeq())) {
                 return true;
             } else {
                 return false;

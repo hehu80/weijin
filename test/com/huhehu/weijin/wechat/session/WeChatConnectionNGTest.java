@@ -131,7 +131,7 @@ public class WeChatConnectionNGTest {
                 .responseCookie("login_frequency", "1")
                 .responseCookie("test", "test");
 
-        testSession.getConnection().sendMessage(new WeChatMessage("content").setTime(Instant.now()).setToUser(new WeChatUser("test1")));
+        testSession.getConnection().sendMessage(new WeChatMessage().setContent("content").setTime(Instant.now()).setToUser(new WeChatUser("test1")));
         testSession.getConnection().startSynchronize();
     }
 

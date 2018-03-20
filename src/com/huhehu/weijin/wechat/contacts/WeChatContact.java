@@ -350,7 +350,7 @@ public class WeChatContact implements Serializable {
         } else if (!(obj instanceof WeChatContact)) {
             return false;
         } else {
-            return userId != null && userId.equals(((WeChatContact) obj).userId);
+            return Objects.equals(userId, ((WeChatContact) obj).userId);
         }
     }
 }

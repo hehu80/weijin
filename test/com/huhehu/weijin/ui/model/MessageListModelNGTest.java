@@ -48,9 +48,9 @@ public class MessageListModelNGTest {
         SessionImpl session = new SessionImpl();
         session.setUserActive(new WeChatContact("test1"));
         session.setMessages(new WeChatContact("test1"),
-                new WeChatMessage("test1"),
-                new WeChatMessage("test2"),
-                new WeChatMessage("test3"));
+                new WeChatMessage("test1").setContent("test1"),
+                new WeChatMessage("test2").setContent("test2"),
+                new WeChatMessage("test3").setContent("test3"));
 
         MessageListModel instance1 = new MessageListModelImpl(session);
         assertEquals(instance1.size(), 3);
@@ -64,9 +64,9 @@ public class MessageListModelNGTest {
         SessionImpl session = new SessionImpl();
         session.setUserActive(new WeChatContact("test2"));
         session.setMessages(new WeChatContact("test1"),
-                new WeChatMessage("test1"),
-                new WeChatMessage("test2"),
-                new WeChatMessage("test3"));
+                new WeChatMessage("test1").setContent("test1"),
+                new WeChatMessage("test2").setContent("test2"),
+                new WeChatMessage("test3").setContent("test3"));
 
         MessageListModel instance1 = new MessageListModelImpl(session);
         assertEquals(instance1.size(), 0);
@@ -77,14 +77,14 @@ public class MessageListModelNGTest {
         SessionImpl session = new SessionImpl();
         session.setUserActive(new WeChatContact("test1"));
         session.setMessages(new WeChatContact("test1"),
-                new WeChatMessage("test1"),
-                new WeChatMessage("test2"),
-                new WeChatMessage("test3"));
+                new WeChatMessage("test1").setContent("test1"),
+                new WeChatMessage("test2").setContent("test2"),
+                new WeChatMessage("test3").setContent("test3"));
 
         MessageListModel instance1 = new MessageListModelImpl(session);
-        session.fireOnMessageReceived(new WeChatMessage("test4").setFromUser(session.getUserActive()));
-        session.fireOnMessageReceived(new WeChatMessage("test5").setToUser(session.getUserActive()));
-        session.fireOnMessageReceived(new WeChatMessage("test6").setFromUser(session.getUserActive()));
+        session.fireOnMessageReceived(new WeChatMessage("test4").setContent("test4").setFromUser(session.getUserActive()));
+        session.fireOnMessageReceived(new WeChatMessage("test5").setContent("test5").setToUser(session.getUserActive()));
+        session.fireOnMessageReceived(new WeChatMessage("test6").setContent("test6").setFromUser(session.getUserActive()));
 
         assertEquals(instance1.size(), 6);
         assertEquals(instance1.get(0).getContent(), "test1");
@@ -99,14 +99,14 @@ public class MessageListModelNGTest {
     public void test_message_received_noActiveUser() {
         SessionImpl session = new SessionImpl();
         session.setMessages(new WeChatContact("test1"),
-                new WeChatMessage("test1"),
-                new WeChatMessage("test2"),
-                new WeChatMessage("test3"));
+                new WeChatMessage("test1").setContent("test1"),
+                new WeChatMessage("test2").setContent("test2"),
+                new WeChatMessage("test3").setContent("test3"));
 
         MessageListModel instance1 = new MessageListModelImpl(session);
-        session.fireOnMessageReceived(new WeChatMessage("test4"));
-        session.fireOnMessageReceived(new WeChatMessage("test5"));
-        session.fireOnMessageReceived(new WeChatMessage("test6"));
+        session.fireOnMessageReceived(new WeChatMessage("test1").setContent("test4"));
+        session.fireOnMessageReceived(new WeChatMessage("test2").setContent("test5"));
+        session.fireOnMessageReceived(new WeChatMessage("test3").setContent("test6"));
 
         assertEquals(instance1.size(), 0);
     }
@@ -116,14 +116,14 @@ public class MessageListModelNGTest {
         SessionImpl session = new SessionImpl();
         session.setUserActive(new WeChatContact("test1"));
         session.setMessages(new WeChatContact("test1"),
-                new WeChatMessage("test1"),
-                new WeChatMessage("test2"),
-                new WeChatMessage("test3"));
+                new WeChatMessage("test1").setContent("test1"),
+                new WeChatMessage("test2").setContent("test2"),
+                new WeChatMessage("test3").setContent("test3"));
 
         MessageListModel instance1 = new MessageListModelImpl(session);
-        session.fireOnMessageReceived(new WeChatMessage("test4").setFromUser(new WeChatContact("test2")));
-        session.fireOnMessageReceived(new WeChatMessage("test5").setToUser(new WeChatContact("test2")));
-        session.fireOnMessageReceived(new WeChatMessage("test6").setFromUser(new WeChatContact("test2")));
+        session.fireOnMessageReceived(new WeChatMessage("test4").setContent("test4").setFromUser(new WeChatContact("test2")));
+        session.fireOnMessageReceived(new WeChatMessage("test5").setContent("test5").setToUser(new WeChatContact("test2")));
+        session.fireOnMessageReceived(new WeChatMessage("test6").setContent("test6").setFromUser(new WeChatContact("test2")));
 
         assertEquals(instance1.size(), 3);
         assertEquals(instance1.get(0).getContent(), "test1");
@@ -136,14 +136,14 @@ public class MessageListModelNGTest {
         SessionImpl session = new SessionImpl();
         session.setUserActive(new WeChatContact("test1"));
         session.setMessages(new WeChatContact("test1"),
-                new WeChatMessage("test1").setMessageId("test1"),
-                new WeChatMessage("test2").setMessageId("test2"),
-                new WeChatMessage("test3").setMessageId("test3"));
+                new WeChatMessage("test1").setContent("test1"),
+                new WeChatMessage("test2").setContent("test2"),
+                new WeChatMessage("test3").setContent("test3"));
 
         MessageListModel instance1 = new MessageListModelImpl(session);
-        session.fireOnMessageReceived(new WeChatMessage("test4").setMessageId("test1").setFromUser(session.getUserActive()));
-        session.fireOnMessageReceived(new WeChatMessage("test5").setMessageId("test2").setToUser(session.getUserActive()));
-        session.fireOnMessageReceived(new WeChatMessage("test6").setMessageId("test3").setFromUser(session.getUserActive()));
+        session.fireOnMessageReceived(new WeChatMessage("test1").setContent("test4").setFromUser(session.getUserActive()));
+        session.fireOnMessageReceived(new WeChatMessage("test2").setContent("test5").setToUser(session.getUserActive()));
+        session.fireOnMessageReceived(new WeChatMessage("test3").setContent("test6").setFromUser(session.getUserActive()));
 
         assertEquals(instance1.size(), 3);
         assertEquals(instance1.get(0).getContent(), "test4");
@@ -156,14 +156,14 @@ public class MessageListModelNGTest {
         SessionImpl session = new SessionImpl();
         session.setUserActive(new WeChatContact("test1"));
         session.setMessages(new WeChatContact("test1"),
-                new WeChatMessage("test1").setMessageId("test1"),
-                new WeChatMessage("test2").setMessageId("test2"),
-                new WeChatMessage("test3").setMessageId("test3"));
+                new WeChatMessage("test1").setContent("test1"),
+                new WeChatMessage("test2").setContent("test2"),
+                new WeChatMessage("test3").setContent("test3"));
 
         MessageListModel instance1 = new MessageListModelImpl(session);
-        session.fireOnMessageReceived(new WeChatMessage("test4").setMessageId("test1").setFromUser(new WeChatContact("test2")));
-        session.fireOnMessageReceived(new WeChatMessage("test5").setMessageId("test2").setToUser(new WeChatContact("test2")));
-        session.fireOnMessageReceived(new WeChatMessage("test6").setMessageId("test3").setFromUser(new WeChatContact("test2")));
+        session.fireOnMessageReceived(new WeChatMessage("test1").setContent("test4").setFromUser(new WeChatContact("test2")));
+        session.fireOnMessageReceived(new WeChatMessage("test2").setContent("test5").setToUser(new WeChatContact("test2")));
+        session.fireOnMessageReceived(new WeChatMessage("test3").setContent("test6").setFromUser(new WeChatContact("test2")));
 
         assertEquals(instance1.size(), 3);
         assertEquals(instance1.get(0).getContent(), "test1");

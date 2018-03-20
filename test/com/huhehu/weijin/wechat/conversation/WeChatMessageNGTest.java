@@ -40,34 +40,34 @@ public class WeChatMessageNGTest {
     }
 
     @Test
-    public void test_constructor_content() {
-        assertEquals("test", new WeChatMessage("test").getContent());
+    public void test_constructor_messageId() {
+        assertEquals(new WeChatMessage("test1").getMessageId(), "test1");
     }
 
     @Test
     public void test_hashCode_same() {
-        WeChatMessage instance1 = new WeChatMessage().setMessageId("test1");
-        WeChatMessage instance2 = new WeChatMessage().setMessageId("test1");
+        WeChatMessage instance1 = new WeChatMessage("test1");
+        WeChatMessage instance2 = new WeChatMessage("test1");
         assertEquals(instance1.hashCode(), instance2.hashCode());
     }
 
     @Test
     public void test_hashCode_notSame() {
-        WeChatMessage instance1 = new WeChatMessage().setMessageId("test1");
-        WeChatMessage instance2 = new WeChatMessage().setMessageId("test2");
+        WeChatMessage instance1 = new WeChatMessage("test1");
+        WeChatMessage instance2 = new WeChatMessage("test2");
         assertNotEquals(instance1.hashCode(), instance2.hashCode());
     }
 
     @Test
     public void test_equals_null() {
-        WeChatMessage instance1 = new WeChatMessage().setMessageId("test1");
+        WeChatMessage instance1 = new WeChatMessage("test1");
         WeChatMessage instance2 = null;
         assertFalse(instance1.equals(instance2));
     }
 
     @Test
     public void test_equals_differentClass() {
-        WeChatMessage instance1 = new WeChatMessage().setMessageId("test1");
+        WeChatMessage instance1 = new WeChatMessage("test1");
         WeChatContact instance2 = new WeChatContact("test1");
         assertFalse(instance1.equals(instance2));
         assertFalse(instance2.equals(instance1));
@@ -75,31 +75,31 @@ public class WeChatMessageNGTest {
 
     @Test
     public void test_equals_differentId() {
-        WeChatMessage instance1 = new WeChatMessage().setMessageId("test1");
-        WeChatMessage instance2 = new WeChatMessage().setMessageId("test2");
+        WeChatMessage instance1 = new WeChatMessage("test1");
+        WeChatMessage instance2 = new WeChatMessage("test2");
         assertFalse(instance1.equals(instance2));
         assertFalse(instance2.equals(instance1));
     }
 
     @Test
     public void test_equals_sameId() {
-        WeChatMessage instance1 = new WeChatMessage().setMessageId("test1");
-        WeChatMessage instance2 = new WeChatMessage().setMessageId("test1");
+        WeChatMessage instance1 = new WeChatMessage("test1");
+        WeChatMessage instance2 = new WeChatMessage("test1");
         assertTrue(instance1.equals(instance2));
         assertTrue(instance2.equals(instance1));
     }
 
     @Test
     public void test_equals_nullId() {
-        WeChatMessage instance1 = new WeChatMessage().setMessageId(null);
-        WeChatMessage instance2 = new WeChatMessage().setMessageId("test2");
+        WeChatMessage instance1 = new WeChatMessage(null);
+        WeChatMessage instance2 = new WeChatMessage("test2");
         assertFalse(instance1.equals(instance2));
         assertFalse(instance2.equals(instance1));
     }
 
     @Test
     public void test_equals_sameInstance() {
-        WeChatMessage instance1 = new WeChatMessage().setMessageId("test1");
+        WeChatMessage instance1 = new WeChatMessage("test1");
         WeChatMessage instance2 = instance1;
         assertTrue(instance1.equals(instance2));
         assertTrue(instance2.equals(instance1));
