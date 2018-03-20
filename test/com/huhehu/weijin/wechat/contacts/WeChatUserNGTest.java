@@ -140,34 +140,36 @@ public class WeChatUserNGTest {
     }
 
     @Test
-    public void test_fromValidJson_noCity() {
+    public void test_fromValidButEmptyJson() {
         try {
-            JSONObject json = getValidJson();
-            json.remove("City");
+            JSONObject json = new JSONObject();
+            json.put("UserName", "userId");
+            json.put("HeadImgUrl", "imageUrl");
             WeChatUser instance1 = (WeChatUser) WeChatContact.fromJson(json);
-            assertEquals(instance1.getCity(), "");
+            assertEquals(instance1.getImageUrl(), "imageUrl");
+            assertEquals(instance1.getJson(), json.toString());
+            assertEquals(instance1.getUserId(), "userId");
         } catch (WeChatJsonException e) {
             fail("shouldn't throw exception with valid JSON", e);
         }
     }
 
     @Test
-    public void test_fromValidJson_noProvince() {
+    public void test_fromInvalidJson_noUserName() {
         try {
             JSONObject json = getValidJson();
-            json.remove("Province");
-            WeChatUser instance1 = (WeChatUser) WeChatContact.fromJson(json);
-            assertEquals(instance1.getProvince(), "");
+            json.remove("UserName");
+            WeChatContact.fromJson(json);
+            fail("should throw exception with invalid JSON");
         } catch (WeChatJsonException e) {
-            fail("shouldn't throw exception with valid JSON", e);
         }
     }
 
     @Test
-    public void test_fromInvalidJson() {
+    public void test_fromInvalidJson_noHeadImg() {
         try {
             JSONObject json = getValidJson();
-            json.remove("Signature");
+            json.remove("HeadImgUrl");
             WeChatContact.fromJson(json);
             fail("should throw exception with invalid JSON");
         } catch (WeChatJsonException e) {

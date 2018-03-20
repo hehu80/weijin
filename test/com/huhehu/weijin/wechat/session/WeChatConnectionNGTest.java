@@ -53,6 +53,8 @@ import java.util.concurrent.TimeoutException;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 import org.testng.annotations.Test;
@@ -67,7 +69,60 @@ public class WeChatConnectionNGTest {
     }
 
     @Test
-    public void test_connect_sucessfull() throws MalformedURLException {
+    public void test_setConnectTimeout() throws IOException {
+        WeChatConnectionImpl testConnection = new WeChatConnectionImpl();
+        testConnection.setConnectTimeout(123);
+        assertEquals(testConnection.openConnection(URL_INIT).getConnectTimeout(), 123);
+    }
+
+    @Test
+    public void test_setreadTimeout() throws IOException {
+        WeChatConnectionImpl testConnection = new WeChatConnectionImpl();
+        testConnection.setReadTimeout(123);
+        assertEquals(testConnection.openConnection(URL_INIT).getReadTimeout(), 123);
+    }
+
+    @Test
+    public void test_connect_sucessfull_withoutContacts() throws MalformedURLException {
+        WeChatSessionImpl testSession = new WeChatSessionImpl();
+        testSession.addConnection().request(String.format(URL_QR_CODE_REQUEST, APP_ID))
+                .response("window.QRLogin.uuid=test");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=201");
+        testSession.addConnection().request(String.format(URL_LOGIN_2, "test"))
+                .response("window.redirect_uri=http://localhost");
+        testSession.addConnection().request(String.format("http://localhost&fun=new&version=v2&lang=de_"))
+                .response("<skey>testskey</skey><wxsid>testwxsid</wxsid><wxuin>testwxuin</wxuin><pass_ticket>testpassticket</pass_ticket>")
+                .requestCookie("test", "test");
+        testSession.addConnection().request(String.format(URL_INIT, "testpassticket"))
+                .requestJson("\\{\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\}\\}")
+                .response("{User: {HeadImgUrl:\"\", UserName:\"testuser\"}}");
+        testSession.addConnection().request(String.format(URL_CONTACT_LIST, "testpassticket", "testskey"))
+                .response("{SyncKey: {List: []}, MemberList: []}")
+                .responseCookie("last_wxuin", "testwxuin")
+                .responseCookie("login_frequency", "1")
+                .responseCookie("test", "test");
+        testSession.addConnection().request(String.format(URL_SYNCHRONIZE, "testwxsid", "testskey", "testpassticket"))
+                .requestJson("\\{\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\},\"SyncKey\":\\{\"List\":\\[\\],\"Count\":0\\}\\}")
+                .response("{SyncKey: {List: []}, MemberList: []}")
+                .responseCookie("last_wxuin", "testwxuin")
+                .responseCookie("login_frequency", "1")
+                .responseCookie("test", "test");
+
+        testSession.setOnSessionDisconnect((u) -> fail("session disconnect not expected"));
+        testSession.setOnSessionError((e) -> fail("session error not expected"));
+        testSession.connect();
+        assertTrue(testSession.getConnections().isEmpty());
+        assertTrue(testSession.isConnected());
+        assertTrue(testSession.getConnection().isConnected());
+        assertEquals(testSession.getConnection().getSessionKey(), "testskey");
+        assertTrue(testSession.getContactsActive().isEmpty());
+        assertTrue(testSession.getContactsSaved().isEmpty());
+        assertEquals(testSession.getUserLogin(), new WeChatContact("testuser"));
+    }
+
+    @Test
+    public void test_connect_sucessfull_withContacts() throws MalformedURLException {
         WeChatSessionImpl testSession = new WeChatSessionImpl();
         testSession.addConnection().request(String.format(URL_QR_CODE_REQUEST, APP_ID))
                 .response("window.QRLogin.uuid=test");
@@ -81,6 +136,61 @@ public class WeChatConnectionNGTest {
         testSession.addConnection().request(String.format(URL_INIT, "testpassticket"))
                 .requestJson("\\{\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\}\\}")
                 .response("{User: {HeadImgUrl:\"\", Sex:1, Alias:\"alias\", Uin:123, UserName:\"testuser\", NickName:\"\", ContactFlag:1, RemarkName:\"\", Signature:\"\", VerifyFlag:2, PYInitial:\"\", PYQuanPin:\"\"}}");
+        testSession.addConnection().request(String.format(URL_CONTACT_LIST, "testpassticket", "testskey"))
+                .response("{SyncKey: {List: []}, MemberList: [{HeadImgUrl:\"\", UserName:\"test1\"}], ContactList: [{HeadImgUrl:\"\", UserName:\"test3\"}]}")
+                .responseCookie("last_wxuin", "testwxuin")
+                .responseCookie("login_frequency", "1")
+                .responseCookie("test", "test");
+        testSession.addConnection().request(String.format(URL_SYNCHRONIZE, "testwxsid", "testskey", "testpassticket"))
+                .requestJson("\\{\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\},\"SyncKey\":\\{\"List\":\\[\\],\"Count\":0\\}\\}")
+                .response("{SyncKey: {List: []}, MemberList: [{HeadImgUrl:\"\", UserName:\"test2\"}], ContactList: [{HeadImgUrl:\"\", UserName:\"test4\"}]}")
+                .responseCookie("last_wxuin", "testwxuin")
+                .responseCookie("login_frequency", "1")
+                .responseCookie("test", "test");
+
+        testSession.setOnSessionDisconnect((u) -> fail("session disconnect not expected"));
+        testSession.setOnSessionError((e) -> fail("session error not expected"));
+        testSession.connect();
+        assertTrue(testSession.getConnections().isEmpty());
+        assertTrue(testSession.isConnected());
+        assertTrue(testSession.getConnection().isConnected());
+        assertEquals(testSession.getConnection().getSessionKey(), "testskey");
+        assertFalse(testSession.getContactsActive().isEmpty());
+        assertFalse(testSession.getContactsSaved().isEmpty());
+        assertEquals(testSession.getUserLogin(), new WeChatContact("testuser"));
+        assertEquals(testSession.getContactsSaved().size(), 2);
+        assertEquals(testSession.getContactsSaved().get(0), new WeChatContact("test1"));
+        assertEquals(testSession.getContactsSaved().get(1), new WeChatContact("test2"));
+        assertEquals(testSession.getContactsActive().size(), 2);
+        assertEquals(testSession.getContactsActive().get(0), new WeChatContact("test3"));
+        assertEquals(testSession.getContactsActive().get(1), new WeChatContact("test4"));
+    }
+
+    @Test
+    public void test_connect_sucessfull_withSeveralAttempts() throws MalformedURLException {
+        WeChatSessionImpl testSession = new WeChatSessionImpl();
+        testSession.addConnection().request(String.format(URL_QR_CODE_REQUEST, APP_ID))
+                .response("window.QRLogin.uuid=test");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=201");
+        testSession.addConnection().request(String.format(URL_LOGIN_2, "test"))
+                .response("window.redirect_uri=http://localhost");
+        testSession.addConnection().request(String.format("http://localhost&fun=new&version=v2&lang=de_"))
+                .response("<skey>testskey</skey><wxsid>testwxsid</wxsid><wxuin>testwxuin</wxuin><pass_ticket>testpassticket</pass_ticket>")
+                .requestCookie("test", "test");
+        testSession.addConnection().request(String.format(URL_INIT, "testpassticket"))
+                .requestJson("\\{\"BaseRequest\":\\{\"DeviceID\":\"e\\d+\",\"Uin\":\"testwxuin\",\"Skey\":\"testskey\",\"Sid\":\"testwxsid\"\\}\\}")
+                .response("{User: {HeadImgUrl:\"\", UserName:\"testuser\"}}");
         testSession.addConnection().request(String.format(URL_CONTACT_LIST, "testpassticket", "testskey"))
                 .response("{SyncKey: {List: []}, MemberList: []}")
                 .responseCookie("last_wxuin", "testwxuin")
@@ -96,10 +206,74 @@ public class WeChatConnectionNGTest {
         testSession.connect();
         assertTrue(testSession.getConnections().isEmpty());
         assertTrue(testSession.isConnected());
+        assertEquals(testSession.getConnection().getSessionKey(), "testskey");
         assertTrue(testSession.getConnection().isConnected());
         assertTrue(testSession.getContactsActive().isEmpty());
         assertTrue(testSession.getContactsSaved().isEmpty());
         assertEquals(testSession.getUserLogin(), new WeChatContact("testuser"));
+    }
+
+    @Test
+    public void test_connect_not_sucessfull_after_qrcode() throws MalformedURLException {
+        WeChatSessionImpl testSession = new WeChatSessionImpl();
+        testSession.addConnection().request(String.format(URL_QR_CODE_REQUEST, APP_ID))
+                .response("window.QRLogin.uuid=test");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=123");
+
+        testSession.setOnSessionConnect((u) -> fail("session connect not expected"));
+        testSession.connect();
+        assertTrue(testSession.getConnections().isEmpty());
+        assertFalse(testSession.isConnected());
+        assertFalse(testSession.getConnection().isConnected());
+        assertTrue(testSession.getContactsActive().isEmpty());
+        assertTrue(testSession.getContactsSaved().isEmpty());
+        assertNull(testSession.getUserLogin());
+    }
+
+    @Test
+    public void test_connect_not_sucessfull_before_qrcode() throws MalformedURLException {
+        WeChatSessionImpl testSession = new WeChatSessionImpl();
+        testSession.addConnection().request(String.format(URL_QR_CODE_REQUEST, APP_ID))
+                .response("window");
+
+        testSession.setOnSessionQRCodeReceived((i) -> fail("session qrcode not expected"));
+        testSession.setOnSessionConnect((u) -> fail("session connect not expected"));
+        testSession.connect();
+        assertTrue(testSession.getConnections().isEmpty());
+        assertFalse(testSession.isConnected());
+        assertFalse(testSession.getConnection().isConnected());
+        assertTrue(testSession.getContactsActive().isEmpty());
+        assertTrue(testSession.getContactsSaved().isEmpty());
+        assertNull(testSession.getUserLogin());
+    }
+
+    @Test
+    public void test_connect_not_sucessfull_withSeveralAttempts() throws MalformedURLException {
+        WeChatSessionImpl testSession = new WeChatSessionImpl();
+        testSession.addConnection().request(String.format(URL_QR_CODE_REQUEST, APP_ID))
+                .response("window.QRLogin.uuid=test");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=408");
+        testSession.addConnection().request(String.format(URL_LOGIN_1, "test"))
+                .response("window.code=222");
+
+        testSession.setOnSessionConnect((u) -> fail("session connect not expected"));
+        testSession.connect();
+        assertTrue(testSession.getConnections().isEmpty());
+        assertFalse(testSession.isConnected());
+        assertFalse(testSession.getConnection().isConnected());
+        assertTrue(testSession.getContactsActive().isEmpty());
+        assertTrue(testSession.getContactsSaved().isEmpty());
+        assertNull(testSession.getUserLogin());
     }
 
     public static class WeChatSessionImpl extends WeChatSession {
@@ -128,10 +302,20 @@ public class WeChatConnectionNGTest {
 
     }
 
-    public static class WeChatConnectionImpl extends WeChatConnection {       
-        
+    public static class WeChatConnectionImpl extends WeChatConnection {
+
+        private int requestsPassed;
+        private MockedExecutorService updateExecutor;
+        private MockedExecutorService eventExecutor;
+
         public WeChatConnectionImpl(WeChatSessionImpl session) {
             super(session);
+            eventExecutor.setExecute(true);
+            updateExecutor.setExecute(true);
+        }
+
+        public WeChatConnectionImpl() {
+            super(null);
         }
 
         private List<MockedUrlConnection> getSessionConnections() {
@@ -140,31 +324,37 @@ public class WeChatConnectionNGTest {
 
         @Override
         protected synchronized HttpsURLConnection createUrlConnection(String url) throws IOException {
-            if (getSessionConnections().isEmpty()) {
-                fail("no further request expected, but found " + url);
+            if (getSession() != null) {
+                requestsPassed++;
+
+                if (getSessionConnections().isEmpty()) {
+                    fail("no further request expected, but found " + url);
+                }
+
+                MockedUrlConnection connection = getSessionConnections().remove(0);
+
+                if (!url.equals(connection.getRequest()) && !url.matches(connection.getRequest())) {
+                    fail(requestsPassed + ". url doesn't match: [" + connection.getRequest() + "] expected but was [" + url + "]");
+                }
+
+                if (getSessionConnections().isEmpty()) {
+                    shutdownNow(); // CAUTION: stop connection after last URL request (otherwise it will never stop)
+                }
+
+                return connection;
+            } else {
+                return super.createUrlConnection(url);
             }
-
-            MockedUrlConnection connection = getSessionConnections().remove(0);
-
-            if (!url.equals(connection.getRequest()) && !url.matches(connection.getRequest())) {
-                fail("url doesn't match: [" + connection.getRequest() + "] expected but was [" + url + "]");
-            }
-
-            if (getSessionConnections().isEmpty()) {
-                shutdownNow(); // CAUTION: stop connection after last URL request (otherwise it will never stop)
-            }
-
-            return connection;
         }
 
         @Override
         protected ExecutorService createUpdateExecutor() {
-            return new MockedExecutorService(true);
+            return updateExecutor = new MockedExecutorService(false);
         }
 
         @Override
         protected ExecutorService createEventExecutor() {
-            return new MockedExecutorService(true);
+            return eventExecutor = new MockedExecutorService(false);
         }
 
     }
@@ -290,9 +480,21 @@ public class WeChatConnectionNGTest {
 
         private boolean shutdown;
         private boolean execute;
+        private List<Runnable> tasks = new ArrayList<>();
 
         public MockedExecutorService(boolean execute) {
             this.execute = execute;
+        }
+
+        public void setExecute(boolean execute) {
+            if (this.execute != execute) {
+                this.execute = execute;
+                if (!shutdown && execute) {
+                    while (!tasks.isEmpty()) {
+                        tasks.remove(0).run();
+                    }
+                }
+            }
         }
 
         @Override
@@ -335,6 +537,8 @@ public class WeChatConnectionNGTest {
         public Future<?> submit(Runnable task) {
             if (execute) {
                 task.run();
+            } else {
+                tasks.add(task);
             }
             return null;
         }
@@ -363,6 +567,8 @@ public class WeChatConnectionNGTest {
         public void execute(Runnable command) {
             if (execute) {
                 command.run();
+            } else {
+                tasks.add(command);
             }
         }
 
@@ -380,4 +586,5 @@ public class WeChatConnectionNGTest {
         }
 
     }
+
 }

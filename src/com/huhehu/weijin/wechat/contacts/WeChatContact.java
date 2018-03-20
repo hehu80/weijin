@@ -22,6 +22,7 @@
  */
 package com.huhehu.weijin.wechat.contacts;
 
+import com.huhehu.weijin.wechat.WeChatException;
 import com.huhehu.weijin.wechat.WeChatJsonException;
 import java.io.Serializable;
 import java.util.Objects;
@@ -67,30 +68,38 @@ public class WeChatContact implements Serializable {
      */
     public static WeChatContact fromJson(JSONObject json) throws WeChatJsonException {
         try {
+            if (!json.has("HeadImgUrl")) {
+                throw new WeChatException("HeadImgUrl required but not found!");
+            }
+
+            if (!json.has("UserName")) {
+                throw new WeChatException("UserName required but not found!");
+            }
+
             WeChatContact contact;
             if (json.getString("HeadImgUrl").contains("webwxgetheadimg")) {
                 WeChatGroup group = new WeChatGroup();
-                group.setMemberCount(json.getInt("MemberCount"));
-                group.setOwnerUin(json.getLong("OwnerUin"));
+                group.setMemberCount(json.has("MemberCount") ? json.getInt("MemberCount") : 0);
+                group.setOwnerUin(json.has("OwnerUin") ? json.getLong("OwnerUin") : 0);
                 contact = group;
             } else {
                 WeChatUser user = new WeChatUser();
-                user.setSex(json.getInt("Sex"));
+                user.setSex(json.has("Sex") ? json.getInt("Sex") : 0);
                 user.setProvince(json.has("Province") ? json.getString("Province") : "");
                 user.setCity(json.has("City") ? json.getString("City") : "");
-                user.setAlias(json.getString("Alias"));
+                user.setAlias(json.has("Alias") ? json.getString("Alias") : "");
                 contact = user;
             }
-            contact.setUin(json.getLong("Uin"));
             contact.setUserId(json.getString("UserName"));
-            contact.setNickName(json.getString("NickName"));
             contact.setImageUrl(json.getString("HeadImgUrl"));
-            contact.setContactFlag(json.getInt("ContactFlag"));
-            contact.setRemarkName(json.getString("RemarkName"));
-            contact.setSignature(json.getString("Signature"));
-            contact.setVerifyFlag(json.getInt("VerifyFlag"));
-            contact.setPinYinInitial(json.getString("PYInitial"));
-            contact.setPinYinQuanPin(json.getString("PYQuanPin"));
+            contact.setUin(json.has("Uin") ? json.getLong("Uin") : 0);
+            contact.setNickName(json.has("NickName") ? json.getString("NickName") : "");
+            contact.setContactFlag(json.has("ContactFlag") ? json.getInt("ContactFlag") : 0);
+            contact.setRemarkName(json.has("RemarkName") ? json.getString("RemarkName") : "");
+            contact.setSignature(json.has("Signature") ? json.getString("Signature") : "");
+            contact.setVerifyFlag(json.has("VerifyFlag") ? json.getInt("VerifyFlag") : 0);
+            contact.setPinYinInitial(json.has("PYInitial") ? json.getString("PYInitial") : "");
+            contact.setPinYinQuanPin(json.has("PYQuanPin") ? json.getString("PYQuanPin") : "");
             contact.setJson(json.toString());
             return contact;
         } catch (Exception e) {

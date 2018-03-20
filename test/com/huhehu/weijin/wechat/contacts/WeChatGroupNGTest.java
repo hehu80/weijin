@@ -133,10 +133,36 @@ public class WeChatGroupNGTest {
     }
 
     @Test
-    public void test_fromInvalidJson() {
+    public void test_fromValidButEmptyJson() {
+        try {
+            JSONObject json = new JSONObject();
+            json.put("UserName", "userId");
+            json.put("HeadImgUrl", "imageUrlwebwxgetheadimg");
+            WeChatGroup instance1 = (WeChatGroup) WeChatContact.fromJson(json);
+            assertEquals(instance1.getImageUrl(), "imageUrlwebwxgetheadimg");
+            assertEquals(instance1.getJson(), json.toString());
+            assertEquals(instance1.getUserId(), "userId");
+        } catch (WeChatJsonException e) {
+            fail("shouldn't throw exception with valid JSON", e);
+        }
+    }
+
+    @Test
+    public void test_fromInvalidJson_noUserName() {
         try {
             JSONObject json = getValidJson();
-            json.remove("RemarkName");
+            json.remove("UserName");
+            WeChatContact.fromJson(json);
+            fail("should throw exception with invalid JSON");
+        } catch (WeChatJsonException e) {
+        }
+    }
+
+    @Test
+    public void test_fromInvalidJson_noHeadImg() {
+        try {
+            JSONObject json = getValidJson();
+            json.remove("HeadImgUrl");
             WeChatContact.fromJson(json);
             fail("should throw exception with invalid JSON");
         } catch (WeChatJsonException e) {

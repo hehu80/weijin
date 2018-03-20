@@ -183,15 +183,15 @@ public class WeChatConnection {
     }
 
     /**
-     * 
+     *
      * @param url
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     protected synchronized HttpsURLConnection createUrlConnection(String url) throws IOException {
         return (HttpsURLConnection) new URL(url).openConnection();
     }
-    
+
     /**
      *
      * @param url
@@ -217,7 +217,7 @@ public class WeChatConnection {
         }
         return connection;
     }
-       
+
     private JSONObject sendJSONRequest(HttpsURLConnection connection) throws IOException {
         return sendJSONRequest(connection, new JSONObject());
     }
@@ -255,13 +255,13 @@ public class WeChatConnection {
     private JSONObject parseJSONResponse(HttpsURLConnection connection) throws IOException {
         JSONObject json = new JSONObject(getStringFromInputStream(connection, "UTF-8"));
 
-        if (isConnected()) {
-            String s = json.toString();
-            if (s.contains("@")) {
-                System.out.println(s);
-            }
-        }
-
+        // TODO if (isConnected()) {
+        // TODO String s = json.toString();
+        // TODO if (s.contains("@")) {
+        // TODO     System.out.println(s);
+        // TODO }
+        // TODO }
+        
         if (json.has("BaseResponse")) {
             int result = json.getJSONObject("BaseResponse").getInt("Ret");
             if (1101 == result) {
@@ -294,8 +294,15 @@ public class WeChatConnection {
             eventExecutor.submit(() -> session.onContactActiveUpdated(contacts.toArray(new WeChatContact[contacts.size()])));
         }
 
-        // DEL CONTACT LIST
-        // MOD CONTACT LIST
+        if (isConnected() && json.has("MemberList")) {
+            // TODO support for DelMember and ModMember
+            List<WeChatContact> contacts = new ArrayList<WeChatContact>();
+            for (Object member : json.getJSONArray("MemberList")) {
+                contacts.add(WeChatContact.fromJson((JSONObject) member));
+            }
+            eventExecutor.submit(() -> session.onContactSavedUpdated(contacts.toArray(new WeChatContact[contacts.size()])));
+        }
+
         List<WeChatMessage> messages = new ArrayList<>();
         if (isConnected() && json.has("AddMsgList")) {
             for (int i = 0; i < json.getJSONArray("AddMsgList").length(); i++) {
@@ -352,13 +359,7 @@ public class WeChatConnection {
 
     private void retreiveContacts() throws IOException {
         HttpsURLConnection connection = openConnection(String.format(URL_CONTACT_LIST, wxpassticket, wxskey));
-
-        List<WeChatContact> contacts = new ArrayList<WeChatContact>();
-        for (Object member : parseJSONResponse(connection).getJSONArray("MemberList")) {
-            contacts.add(WeChatContact.fromJson((JSONObject) member));
-        }
-
-        eventExecutor.submit(() -> session.onContactSavedUpdated(contacts.toArray(new WeChatContact[contacts.size()])));
+        parseJSONResponse(connection);
     }
 
     private boolean retrieveUserId() throws IOException {
